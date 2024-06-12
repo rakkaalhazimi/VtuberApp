@@ -1,0 +1,27 @@
+body {
+  position: relative;
+  margin: 0;
+  width: 100vw;
+  height: 100vh;
+}
+
+#main-render {
+  position: absolute;
+}
+
+#coordinate {
+  display: flex;
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  flex-direction: row;
+  gap: 10px;
+}
+
+#video {
+  position: absolute;
+}
+
+#video-face-landmark {
+  position: absolute;
+}

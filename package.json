@@ -1,0 +1,24 @@
+{
+  "name": "vtuberapp",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "vite",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@mediapipe/face_mesh": "^0.4.1633559619",
+    "@tensorflow-models/face-landmarks-detection": "^1.0.5",
+    "@tensorflow/tfjs": "^4.19.0",
+    "three": "^0.164.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.12",
+    "@types/three": "^0.164.1",
+    "vite": "^5.2.11"
+  }
+}
