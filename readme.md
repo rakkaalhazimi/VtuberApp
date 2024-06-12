@@ -1,6 +1,9 @@
 # VtuberApp
 Simulate virtual youtuber by moving character models based on the human motion.
 
+## Preview
+![Alt Text](preview.gif)
+
 ## How to run
 1. Install dependencies
     ```
