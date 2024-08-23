@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-import { MMDAnimationHelper, MapControls } from 'three/examples/jsm/Addons.js';
+import { MMDAnimationHelper, MapControls, OrbitControls } from 'three/examples/jsm/Addons.js';
 import { OutlineEffect } from 'three/examples/jsm/Addons.js';
 
 import { FaceLandmark } from './face-landmarks';
@@ -66,6 +66,7 @@ class App {
     // Camera Controls
     // Caveat: This will reset the camera rotation.
     // let controls = new MapControls(camera, renderer.domElement);
+    let controls = new OrbitControls(camera, renderer.domElement);
   
     // Background color
     scene.background = new THREE.Color(0x111827);
