@@ -50,9 +50,7 @@ class App {
     let camera = new THREE.PerspectiveCamera(
       75, window.innerWidth / window.innerHeight, 0.1, 1000
     );
-    camera.position.y = 19;
-    camera.position.z = 5;
-    camera.rotation.x += -10 * Math.PI / 180;
+    
   
     // Renderer
     let renderElement = document.getElementById('main-render');
@@ -65,8 +63,12 @@ class App {
   
     // Camera Controls
     // Caveat: This will reset the camera rotation.
+    //         so we need to change the camera position afterward.
     // let controls = new MapControls(camera, renderer.domElement);
     let controls = new OrbitControls(camera, renderer.domElement);
+    camera.position.y = 19;
+    camera.position.z = 5;
+    camera.rotation.x += -10 * Math.PI / 180;
   
     // Background color
     scene.background = new THREE.Color(0x111827);
