@@ -39,11 +39,11 @@ class App {
     let gridHelper = new THREE.PolarGridHelper( 30, 0 );
     scene.add( gridHelper );
   
-    let ambient = new THREE.AmbientLight( 0xaaaaaa, 3 );
+    let ambient = new THREE.AmbientLight( 0xaaaaaa, 2 );
     scene.add( ambient );
   
-    let directionalLight = new THREE.DirectionalLight( 0xffffff, 3 );
-    directionalLight.position.set( - 1, 1, 1 ).normalize();
+    let directionalLight = new THREE.DirectionalLight( 0xffffff, 2 );
+    directionalLight.position.set( 0, 0, 0 ).normalize();
     scene.add( directionalLight );
   
     // Camera
@@ -68,7 +68,7 @@ class App {
     // let controls = new MapControls(camera, renderer.domElement);
   
     // Background color
-    scene.background = new THREE.Color(0xffffff);
+    scene.background = new THREE.Color(0x111827);
     
     
     // Load model
