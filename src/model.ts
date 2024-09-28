@@ -8,7 +8,7 @@ import { boneTranslations, morphTranslations } from './translations';
 
 
 
-const MIN_EAR_THRES = 0.3;
+const MIN_EAR_THRES = 0.2;
 const MAX_MAR_THRES = 0.3;
 
 
@@ -335,7 +335,7 @@ export class ModelMovementGuider {
     if (!faces.length) {
       return;
     }
-    // this.guideBlinking(faces);
+    this.guideBlinking(faces);
     // this.guideOpenMouth(faces);
     this.guideHeadRotation(faces);
     this.guideUpperBodyMovement(faces);
