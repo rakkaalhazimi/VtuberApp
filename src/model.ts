@@ -91,18 +91,19 @@ export class ModelMovementGuider {
   shiftCoordinateNew(
     origin: number, 
     target: number,
-    speed: number = 0.01,
-    multiplier: number = 1,
+    speed: number = 0.03,
+    diffThreshold: number = 0.02,
   ) {
-    
-    let diff = Math.abs(origin - target * multiplier);
-    if (diff <= 0.02) {
+    // Avoid random movement by limiting model movement
+    // sensitivity.
+    let diff = Math.abs(origin - target);
+    if (diff <= diffThreshold) {
       return 0;
     }
-    if (origin < target * multiplier) {
-      return speed;
+    if (origin < target) {
+      return Math.min(speed, diff);
     } else {
-      return -speed;
+      return -Math.min(speed, diff);
     }
   }
   
