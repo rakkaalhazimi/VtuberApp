@@ -12,6 +12,15 @@ const MIN_EAR_THRES = 0.2;
 const MAX_MAR_THRES = 0.3;
 
 
+function saveFileAndDownload(filename: string, content: string) {
+	let link = window.document.createElement('a');
+	let blob = new Blob([content], {type: 'string'});
+	link.href = window.URL.createObjectURL(blob);
+	link.download = filename;
+	link.click();
+}
+
+
 export class Model {
   public mesh: THREE.SkinnedMesh;
   public loader: MMDLoader;
