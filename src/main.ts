@@ -116,6 +116,10 @@ class App {
     await faceLandmark.loadFaceLandmarksDetector();
     let moveGuider = new ModelMovementGuider(model, faceLandmark);
     
+    let poseEstimation = new PoseEstimation(video.height, video.width);
+    await poseEstimation.loadMovenetPoseEstimationDetector();
+    // await poseEstimation.loadBlazePoseEstimationDetector();
+    
     async function animate() {
       requestAnimationFrame(animate);
       

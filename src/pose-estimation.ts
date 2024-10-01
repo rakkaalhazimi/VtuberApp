@@ -1,5 +1,5 @@
 // import '@mediapipe/pose';
-// import '@tensorflow/tfjs-backend-webgl';
+import '@tensorflow/tfjs-backend-webgl';
 import * as poseDetection from '@tensorflow-models/pose-detection';
 import { PoseDetector } from '@tensorflow-models/pose-detection';
 
@@ -19,29 +19,91 @@ const blazePoseConnections = [
   [16, 18], [16, 20], [16, 22]
 ];
 
+// MoveNet keypoint pairs to connect for drawing the skeleton
+const movenetPoseConnections = [
+  // Head and Face
+  [0, 1], [1, 3], [0, 2], [2, 4],
+  // Upper Body
+  [5, 6], [5, 11], [11, 13], [13, 15], [6, 12], [12, 14], [14, 16],
+  // Arms
+  [5, 7], [7, 9], [6, 8], [8, 10]
+];
+
+export enum MovenetPosePoint {
+  NOSE,
+  LEFT_EYE,
+  RIGHT_EYE,
+  LEFT_EAR,
+  RIGHT_EAR,
+  LEFT_SHOULDER,
+  RIGHT_SHOULDER,
+  LEFT_ELBOW,
+  RIGHT_ELBOW,
+  LEFT_WRIST,
+  RIGHT_WRIST,
+  LEFT_HIP,
+  RIGHT_HIP,
+  LEFT_KNEE,
+  RIGHT_KNEE,
+  LEFT_ANKLE,
+  RIGHT_ANKLE,
+}
+
+const POSE_CONFIDENCE_SCORE = 0.5;
+
 export class PoseEstimation {
   public videoWidth: number;
   public videoHeight: number;
   public detector: PoseDetector;
+  public modelType: poseDetection.SupportedModels;
   
   constructor(videoHeight: number, videoWidth: number) {
     this.videoHeight = videoHeight;
     this.videoWidth = videoWidth;
   }
   
-  async loadPoseEstimationDetector() {
-    let model = poseDetection.SupportedModels.BlazePose;
+  async loadMovenetPoseEstimationDetector() {
+    console.log('Loading movenet pose detector...');
+    this.modelType = poseDetection.SupportedModels.MoveNet;
     let detectorConfig = {
       runtime: 'tfjs',
       enableSmoothing: true,
-      modelType: 'full'
+      modelType: 'SinglePose.Lightning',
     };
-    this.detector = await poseDetection.createDetector(model, detectorConfig);
+    this.detector = await poseDetection.createDetector(this.modelType, detectorConfig);
+    console.log('Movenet pose detector is loaded');
+    return this.detector;
+  }
+  
+  async loadBlazePoseEstimationDetector() {
+    console.log('Loading blaze pose detector...');
+    this.modelType = poseDetection.SupportedModels.BlazePose;
+    let detectorConfig = {
+      runtime: 'tfjs',
+      enableSmoothing: true,
+      modelType: 'full',
+    };
+    this.detector = await poseDetection.createDetector(this.modelType, detectorConfig);
+    console.log('Blaze pose detector is loaded');
     return this.detector;
   }
   
   async estimatePose(video: HTMLVideoElement) {
     let poses = await this.detector.estimatePoses(video, {flipHorizontal: false});
+    
+    if (this.modelType == poseDetection.SupportedModels.MoveNet) {
+      // Normalize keypoints for movenet model
+      const modelInputWidth = 640;
+      const modelInputHeight = 480;
+      for (let currentPose of poses) {
+        for (let keypoint of currentPose.keypoints) {
+          // Assuming the model uses a default size like 640x480 for the input.
+          keypoint.x = (keypoint.x / modelInputWidth) * this.videoWidth;
+          keypoint.y = (keypoint.y / modelInputHeight) * this.videoHeight;
+        }
+      }
+    }
+    
     return poses;
   }
   
@@ -67,7 +129,7 @@ export class PoseEstimation {
     // Draw keypoints
     for (let keypoint of currentPose.keypoints) {
       
-      if (keypoint.score! < 0.9) {
+      if (keypoint.score! < POSE_CONFIDENCE_SCORE) {
         continue;
       }
       
@@ -85,13 +147,33 @@ export class PoseEstimation {
     }
     
     // Draw skeletons
-    for (let connections of blazePoseConnections) {
+    let poseConnections: number[][];
+    
+    switch (this.modelType) {
+      
+      case poseDetection.SupportedModels.BlazePose:
+        poseConnections = blazePoseConnections;
+        break;
+        
+      case poseDetection.SupportedModels.MoveNet:
+        poseConnections = movenetPoseConnections;
+        break;
+        
+      default:
+        poseConnections = [];
+        break;
+    }
+    
+    for (let connections of poseConnections) {
       
       let [index1, index2] = connections;
       let keyPoint1 = currentPose.keypoints[index1];
       let keyPoint2 = currentPose.keypoints[index2];
       
-      if (keyPoint1.score! < 0.9 || keyPoint2.score! < 0.9) {
+      if (
+        keyPoint1.score! < POSE_CONFIDENCE_SCORE || 
+        keyPoint2.score! < POSE_CONFIDENCE_SCORE
+      ) {
         continue;
       }
       
