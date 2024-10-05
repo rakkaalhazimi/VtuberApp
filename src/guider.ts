@@ -170,7 +170,7 @@ export class ModelMovementGuider {
     
   }
   
-  guideOpenMouth(faces: Face[]) {
+  guideMouthMovement(faces: Face[]) {
     let mouthTopLeft = 
       this.faceLandmark.getLandmarkCoordinate(
         faces, LandmarkPoint.MOUTH_TOP_LEFT  
