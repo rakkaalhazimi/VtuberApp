@@ -9,7 +9,7 @@ import { MovenetPosePoint } from './pose-estimation';
 
 
 const MIN_EAR_THRES = 0.2;
-const MIN_MAR_THRES = 0.045;
+const MIN_MAR_THRES = 0.08;
 const MAX_MAR_THRES = 0.3;
 
 export class ModelMovementGuider {
