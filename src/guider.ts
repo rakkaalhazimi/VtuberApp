@@ -2,6 +2,7 @@ import { Face, Keypoint } from '@tensorflow-models/face-landmarks-detection';
 import { Pose } from '@tensorflow-models/pose-detection';
 
 import { FaceLandmark, LandmarkPoint } from './face-landmarks';
+import { euclideanDistance2D } from './math';
 import { Model } from './model';
 import { MovenetPosePoint } from './pose-estimation';
 
