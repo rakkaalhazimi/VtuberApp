@@ -58,6 +58,14 @@ export class ModelMovementGuider {
     }
   }
   
+  smoothMovement(
+    newPosition: number, 
+    previousPosition: number, 
+    smoothingFactor: number = 0.2
+  ) {
+    return previousPosition + (newPosition - previousPosition) * smoothingFactor;
+  }
+  
   guideBlinking(faces: Face[]) {
     // Left eyelid
     let leftEyelidTopLeft = 
@@ -248,9 +256,9 @@ export class ModelMovementGuider {
     let pitch = verticalDeltaZ / verticalDeltaY;
     
     let head = this.model.boneDict['Head'];
-    head.rotation.z += this.shiftCoordinateNew(head.rotation.z, roll);
-    head.rotation.y += this.shiftCoordinateNew(head.rotation.y, -yaw);
-    head.rotation.x += this.shiftCoordinateNew(head.rotation.x, pitch);
+    head.rotation.z = this.smoothMovement(roll, head.rotation.z);
+    head.rotation.y = this.smoothMovement(-yaw, head.rotation.y);
+    head.rotation.x = this.smoothMovement(pitch, head.rotation.x);
     
     // let euler = new THREE.Euler(pitch, -yaw, roll);
     // let quaternion = new THREE.Quaternion();
