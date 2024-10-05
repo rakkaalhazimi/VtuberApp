@@ -9,6 +9,7 @@ import { MovenetPosePoint } from './pose-estimation';
 
 
 const MIN_EAR_THRES = 0.2;
+const MIN_MAR_THRES = 0.045;
 const MAX_MAR_THRES = 0.3;
 
 export class ModelMovementGuider {
@@ -188,6 +189,15 @@ export class ModelMovementGuider {
         faces, LandmarkPoint.MOUTH_BOTTOM_RIGHT
     );
     
+    let mouthTopCenter = 
+      this.faceLandmark.getLandmarkCoordinate(
+        faces, LandmarkPoint.MOUTH_TOP_CENTER
+    );
+    let mouthBottomCenter = 
+      this.faceLandmark.getLandmarkCoordinate(
+        faces, LandmarkPoint.MOUTH_BOTTOM_CENTER
+    );
+    
     let mouthStart = 
       this.faceLandmark.getLandmarkCoordinate(
         faces, LandmarkPoint.MOUTH_START
@@ -207,25 +217,83 @@ export class ModelMovementGuider {
       mouthEnd.x
     )
     
+    // Mouth vertical gap
+    let mouthVerticalGap = euclideanDistance2D(
+      [mouthTopCenter.x, mouthTopCenter.y],
+      [mouthBottomCenter.x, mouthBottomCenter.y]
+    );
+    
+    // Mouth width
+    let mouthWidth = euclideanDistance2D(
+      [mouthStart.x, mouthStart.y],
+      [mouthEnd.x, mouthEnd.y]
+    );
+    
+    // Mouth curvature
+    let mouthCurvature = mouthVerticalGap / mouthWidth;
+    
+    // Eye distance
+    let leftEyeStart = 
+      this.faceLandmark.getLandmarkCoordinate(
+        faces, 
+        LandmarkPoint.LEFT_EYELID_START
+    );
+    
+    let rightEyeStart = 
+      this.faceLandmark.getLandmarkCoordinate(
+        faces, 
+        LandmarkPoint.RIGHT_EYELID_START
+    );
+    
+    let eyeDistance = euclideanDistance2D(
+      [rightEyeStart.x, rightEyeStart.y],
+      [leftEyeStart.x, leftEyeStart.y]
+    );
+    
+    // Horizontal Aspect Ratio (HAR)
+    // Eye distance is used for normalization
+    let har = mouthWidth / eyeDistance;
+    
+    // Mouth movement
+    // Vowel A
+    // let mouthARatio = mar / MAX_MAR_THRES;
+    let mouthARatio = Math.max(0, mar - MIN_MAR_THRES) / (MAX_MAR_THRES - MIN_MAR_THRES);
+    if (mar > MIN_MAR_THRES) {
+      this.model.morph('A', Math.min(mouthARatio, 1));
+    } else {
+      let currentValue = this.model.getMorphValue('A');
+      this.model.morph('A', this.smoothMovement(0, currentValue, 0.1));
+    }
+    
+    // Vowel I
+    // When HAR is high but MAR is slightly low
+    let mouthIRatio = Math.max(0, har - 1.3) / (1.4 - 1.3);
+    if (har > 1.3 && mar > 0.04) {
+      this.model.morph('I', Math.min(mouthIRatio, 1));
+    } else {
+      let currentValue = this.model.getMorphValue('I');
+      this.model.morph('I', this.smoothMovement(0, currentValue, 0.1));
+    }
+    
+    // Vowel U
+    // When HAR is low but MAR is slightly high
+    let mouthURatio = 0.5;
+    if (har < 1.150 && mar > 0.05) {
+      this.model.morph('U', mouthURatio);
+    } else {
+      let currentValue = this.model.getMorphValue('U');
+      this.model.morph('U', this.smoothMovement(0, currentValue, 0.1));
+    }
+    
     // let x = document.getElementById('x-coordinate');
     // let y = document.getElementById('y-coordinate');
     // let z = document.getElementById('z-coordinate');
     // x!.innerHTML = mar.toFixed(3);
-    // y!.innerHTML = rightEAR.toFixed(3);
-    // z!.innerHTML = (leftEyeAspectRatio).toFixed(3);
+    // y!.innerHTML = har.toFixed(3);
+    // z!.innerHTML = mouthCurvature.toFixed(3);
     // z!.innerHTML = leftEAR.toFixed(3);
     
-    let mouthOpenValue = this.model.getMorphValue('A');
-    let valueShift: number;
     
-    // Open mouth
-    if (mar > MAX_MAR_THRES) {
-      valueShift = this.shiftCoordinateNew(mouthOpenValue, 0.3, 0.02);
-    // Close mouth
-    } else {
-      valueShift = this.shiftCoordinateNew(mouthOpenValue, 0, 0.02);
-    }
-    this.model.morph('A', valueShift);
   }
   
   guideHeadRotation(faces: Face[]) {
