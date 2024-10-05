@@ -13,6 +13,26 @@ import { PoseEstimation } from './pose-estimation';
 
 class App {
   
+  mouseX: number = 0;
+  mouseY: number = 0;
+  
+  async trackMouseCoordinate() {
+    let coordinateX = document.getElementById('x-coordinate');
+    let coordinateY = document.getElementById('y-coordinate');
+    
+    let factorX = window.innerWidth / 2;
+    let factorY = window.innerHeight / 2;
+    
+    document.body.onmousemove = (event) => {
+      event.preventDefault();
+      // Shift the origin from top-left to center
+      this.mouseX = (event.x - factorX) / factorX;
+      this.mouseY = (event.y - factorY) / factorY;
+      coordinateX!.innerHTML = this.mouseX.toFixed(2);
+      coordinateY!.innerHTML = this.mouseY.toFixed(2);
+    }
+  }
+  
   async showCamera(): Promise<HTMLVideoElement> {
     let video = document.getElementById("video") as HTMLVideoElement;
     if (navigator.mediaDevices) {
