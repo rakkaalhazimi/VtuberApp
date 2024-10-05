@@ -285,13 +285,16 @@ export class ModelMovementGuider {
       this.model.morph('U', this.smoothMovement(0, currentValue, 0.1));
     }
     
-    // let x = document.getElementById('x-coordinate');
-    // let y = document.getElementById('y-coordinate');
-    // let z = document.getElementById('z-coordinate');
-    // x!.innerHTML = mar.toFixed(3);
-    // y!.innerHTML = har.toFixed(3);
-    // z!.innerHTML = mouthCurvature.toFixed(3);
-    // z!.innerHTML = leftEAR.toFixed(3);
+    // Smiling
+    let smileRatio = Math.max(0, har - 1.21) / (1.4 - 1.21);
+    if (mar < 0.025) {
+      this.model.morph('Grin', smileRatio);
+    } else {
+      let currentValue = this.model.getMorphValue('Grin');
+      this.model.morph('Grin', this.smoothMovement(0, currentValue, 0.1));
+    }
+    
+    
     
     
   }
