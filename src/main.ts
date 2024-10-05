@@ -4,8 +4,10 @@ import { MMDAnimationHelper, MapControls, OrbitControls } from 'three/examples/j
 import { OutlineEffect } from 'three/examples/jsm/Addons.js';
 
 import { FaceLandmark } from './face-landmarks';
-import { Model, ModelMovementGuider } from './model';
 import { AppGUI } from './gui';
+import { ModelMovementGuider } from './guider';
+import { Model } from './model';
+import { PoseEstimation } from './pose-estimation';
 
 
 
