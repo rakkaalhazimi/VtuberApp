@@ -10,7 +10,7 @@ import { MovenetPosePoint } from './pose-estimation';
 
 const MIN_EAR_THRES = 0.2;
 
-const MIN_MAR_VOWEL_A = 0.06;
+const MIN_MAR_VOWEL_A = 0.08;
 const MAX_MAR_VOWEL_A = 0.2;
 const MIN_HAR_VOWEL_A = 0;
 
@@ -19,7 +19,7 @@ const MAX_MAR_VOWEL_I = 0.12;
 const MIN_HAR_VOWEL_I = 1.3;
 const MAX_HAR_VOWEL_I = 1.4;
 
-const MIN_MAR_VOWEL_U = 0.05;
+const MIN_MAR_VOWEL_U = 0.08;
 const MAX_MAR_VOWEL_U = 0.12;
 const MAX_HAR_VOWEL_U = 1.150;
 
