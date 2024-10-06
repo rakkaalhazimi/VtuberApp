@@ -50,6 +50,8 @@ export enum MovenetPosePoint {
 }
 
 const POSE_CONFIDENCE_SCORE = 0.5;
+const MODEL_INPUT_WIDTH = 640;
+const MODEL_INPUT_HEIGHT = 480;
 
 export class PoseEstimation {
   public videoWidth: number;
@@ -93,13 +95,11 @@ export class PoseEstimation {
     
     if (this.modelType == poseDetection.SupportedModels.MoveNet) {
       // Normalize keypoints for movenet model
-      const modelInputWidth = 640;
-      const modelInputHeight = 480;
       for (let currentPose of poses) {
         for (let keypoint of currentPose.keypoints) {
           // Assuming the model uses a default size like 640x480 for the input.
-          keypoint.x = (keypoint.x / modelInputWidth) * this.videoWidth;
-          keypoint.y = (keypoint.y / modelInputHeight) * this.videoHeight;
+          keypoint.x = (keypoint.x / MODEL_INPUT_WIDTH) * this.videoWidth;
+          keypoint.y = (keypoint.y / MODEL_INPUT_HEIGHT) * this.videoHeight;
         }
       }
     }
