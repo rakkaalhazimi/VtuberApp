@@ -387,8 +387,8 @@ export class ModelMovementGuider {
     let leftShoulder = this.model.boneDict['Left shoulder'];
     let rightShoulder = this.model.boneDict['Right shoulder'];
     
-    leftShoulder.rotation.z = shoulderGradient;
-    rightShoulder.rotation.z = shoulderGradient;
+    leftShoulder.rotation.z = this.smoothMovement(shoulderGradient, leftShoulder.rotation.z, 0.1);
+    rightShoulder.rotation.z = this.smoothMovement(shoulderGradient, rightShoulder.rotation.z, 0.1);
     
     // Lower the arms as the shoulder go up
     let leftArm = this.model.boneDict['Left arm'];
