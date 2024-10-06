@@ -38,11 +38,15 @@ export class Model {
     
     // Map model bone with its english names
     let bones = this.mesh.skeleton.bones;
+    // let boneNames: string[] = [];
     for (let bone of bones) {
       let boneName = bone.name;
-      let boneEngName = boneTranslations[boneName];
+      // boneNames.push(boneName);
+      let boneEngName = boneTranslations[boneName] ?? boneName;
       this.boneDict[boneEngName] = bone;
     }
+    // saveFileAndDownload('bones.txt', boneNames.join('\n'));
+    // console.log('Bone total: ', bones.length);
     
     return this.mesh;
   }
