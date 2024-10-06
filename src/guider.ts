@@ -9,8 +9,23 @@ import { MovenetPosePoint } from './pose-estimation';
 
 
 const MIN_EAR_THRES = 0.2;
-const MIN_MAR_THRES = 0.08;
-const MAX_MAR_THRES = 0.3;
+
+const MIN_MAR_VOWEL_A = 0.06;
+const MAX_MAR_VOWEL_A = 0.2;
+const MIN_HAR_VOWEL_A = 0;
+
+const MIN_MAR_VOWEL_I = 0.04;
+const MAX_MAR_VOWEL_I = 0.12;
+const MIN_HAR_VOWEL_I = 1.3;
+const MAX_HAR_VOWEL_I = 1.4;
+
+const MIN_MAR_VOWEL_U = 0.05;
+const MAX_MAR_VOWEL_U = 0.12;
+const MAX_HAR_VOWEL_U = 1.150;
+
+
+
+
 
 export class ModelMovementGuider {
   public model: Model;
@@ -257,8 +272,11 @@ export class ModelMovementGuider {
     // Mouth movement
     // Vowel A
     // let mouthARatio = mar / MAX_MAR_THRES;
-    let mouthARatio = Math.max(0, mar - MIN_MAR_THRES) / (MAX_MAR_THRES - MIN_MAR_THRES);
-    if (mar > MIN_MAR_THRES) {
+    let mouthARatio = 
+      Math.max(0, mar - MIN_MAR_VOWEL_A) / 
+      (MAX_MAR_VOWEL_A - MIN_MAR_VOWEL_A);
+      
+    if (mar > MIN_MAR_VOWEL_A) {
       this.model.morph('A', Math.min(mouthARatio, 1));
     } else {
       let currentValue = this.model.getMorphValue('A');
@@ -267,8 +285,15 @@ export class ModelMovementGuider {
     
     // Vowel I
     // When HAR is high but MAR is slightly low
-    let mouthIRatio = Math.max(0, har - 1.3) / (1.4 - 1.3);
-    if (har > 1.3 && mar > 0.04) {
+    let mouthIRatio = 
+      Math.max(0, har - MIN_HAR_VOWEL_I) / 
+      (MAX_HAR_VOWEL_I - MIN_HAR_VOWEL_I);
+      
+    if (
+      har > MIN_HAR_VOWEL_I && 
+      mar > MIN_MAR_VOWEL_I && 
+      mar < MAX_MAR_VOWEL_I
+    ) {
       this.model.morph('I', Math.min(mouthIRatio, 1));
     } else {
       let currentValue = this.model.getMorphValue('I');
@@ -278,7 +303,7 @@ export class ModelMovementGuider {
     // Vowel U
     // When HAR is low but MAR is slightly high
     let mouthURatio = 0.5;
-    if (har < 1.150 && mar > 0.05) {
+    if (har < MAX_HAR_VOWEL_U && mar > MIN_MAR_VOWEL_U) {
       this.model.morph('U', mouthURatio);
     } else {
       let currentValue = this.model.getMorphValue('U');
