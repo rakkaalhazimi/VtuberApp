@@ -2,8 +2,8 @@ import { Face, Keypoint } from '@tensorflow-models/face-landmarks-detection';
 import { Pose } from '@tensorflow-models/pose-detection';
 
 import { FaceLandmark, LandmarkPoint } from './face-landmarks';
-import { euclideanDistance2D, gradient2D } from './math';
-import { showXValue } from './metric';
+import { euclideanDistance2D, gradient2D, angleOfTriangle2D } from './math';
+import { showXValue, showYValue, showZValue } from './metric';
 import { Model } from './model';
 import { MovenetPosePoint } from './pose-estimation';
 
@@ -378,27 +378,56 @@ export class ModelMovementGuider {
     let leftShoulderPose = currentPose.keypoints[MovenetPosePoint.LEFT_SHOULDER];
     let rightShoulderPose = currentPose.keypoints[MovenetPosePoint.RIGHT_SHOULDER];
     
+    let leftElbowPose = currentPose.keypoints[MovenetPosePoint.LEFT_ELBOW];
+    let rightElbowPose = currentPose.keypoints[MovenetPosePoint.RIGHT_ELBOW];
+    
+    let leftShoulder = this.model.boneDict['Left shoulder'];
+    let rightShoulder = this.model.boneDict['Right shoulder'];
+    
+    let leftArm = this.model.boneDict['Left arm'];
+    let rightArm = this.model.boneDict['Right arm'];
+    
+    // Raise shoulder up and down
     let shoulderGradient = gradient2D(
       [leftShoulderPose.x, leftShoulderPose.y],
       [rightShoulderPose.x, rightShoulderPose.y]
     );
     
-    // Raise shoulder up and down
-    let leftShoulder = this.model.boneDict['Left shoulder'];
-    let rightShoulder = this.model.boneDict['Right shoulder'];
+    leftShoulder.rotation.z = this.smoothMovement(shoulderGradient, leftShoulder.rotation.z, 0.4);
+    rightShoulder.rotation.z = this.smoothMovement(shoulderGradient, rightShoulder.rotation.z, 0.4);
     
-    leftShoulder.rotation.z = this.smoothMovement(shoulderGradient, leftShoulder.rotation.z, 0.1);
-    rightShoulder.rotation.z = this.smoothMovement(shoulderGradient, rightShoulder.rotation.z, 0.1);
+    // Rotate arms based on shoulder angle
+    let leftShoulderAngle = angleOfTriangle2D(
+      [rightShoulderPose.x, rightShoulderPose.y],
+      [leftShoulderPose.x, leftShoulderPose.y],
+      [leftElbowPose.x, leftElbowPose.y],
+    );
+    
+    let rightShoulderAngle = angleOfTriangle2D(
+      [leftShoulderPose.x, leftShoulderPose.y],
+      [rightShoulderPose.x, rightShoulderPose.y],
+      [rightElbowPose.x, rightElbowPose.y],
+    );
+    
+    // Adjust the angle with 90 degree from human normal pose
+    // and 45 degree from model default hand pose.
+    leftArm.rotation.z = leftShoulderAngle - (Math.PI / 2) - (Math.PI / 4);
+    rightArm.rotation.z = -rightShoulderAngle + (Math.PI / 2) + (Math.PI / 4);
+    
     
     // Lower the arms as the shoulder go up
-    let leftArm = this.model.boneDict['Left arm'];
-    let rightArm = this.model.boneDict['Right arm'];
     
-    if (shoulderGradient > 0) {
-      // leftArm.rotation.z = Math.max(-0.5, shoulderGradient * leftArm.rotation.z);
-    }
+    // if (shoulderGradient > 0) {
+    //   leftArm.rotation.z = this.smoothMovement(-0.8, leftArm.rotation.z, 0.1);
+    //   rightArm.rotation.z = this.smoothMovement(0.5, rightArm.rotation.z, 0.1);
+    // } else {
+    //   leftArm.rotation.z = this.smoothMovement(-0.5, leftArm.rotation.z, 0.1);
+    //   rightArm.rotation.z = this.smoothMovement(0.8, rightArm.rotation.z, 0.1);
+    // }
     
     showXValue(shoulderGradient);
+    // showYValue(cosine);
+    showZValue(leftShoulderAngle);
   }
   
   guideUpperBodyMovement(faces: Face[], poses: Pose[]) {
