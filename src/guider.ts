@@ -2,7 +2,8 @@ import { Face, Keypoint } from '@tensorflow-models/face-landmarks-detection';
 import { Pose } from '@tensorflow-models/pose-detection';
 
 import { FaceLandmark, LandmarkPoint } from './face-landmarks';
-import { euclideanDistance2D } from './math';
+import { euclideanDistance2D, gradient2D } from './math';
+import { showXValue } from './metric';
 import { Model } from './model';
 import { MovenetPosePoint } from './pose-estimation';
 
@@ -369,6 +370,35 @@ export class ModelMovementGuider {
     // y!.innerHTML = yaw.toFixed(3);
     // z!.innerHTML = pitch.toFixed(3);
     
+  }
+  
+  guideShoulderMovement(poses: Pose[]) {
+    let currentPose = poses[0];
+    
+    let leftShoulderPose = currentPose.keypoints[MovenetPosePoint.LEFT_SHOULDER];
+    let rightShoulderPose = currentPose.keypoints[MovenetPosePoint.RIGHT_SHOULDER];
+    
+    let shoulderGradient = gradient2D(
+      [leftShoulderPose.x, leftShoulderPose.y],
+      [rightShoulderPose.x, rightShoulderPose.y]
+    );
+    
+    // Raise shoulder up and down
+    let leftShoulder = this.model.boneDict['Left shoulder'];
+    let rightShoulder = this.model.boneDict['Right shoulder'];
+    
+    leftShoulder.rotation.z = shoulderGradient;
+    rightShoulder.rotation.z = shoulderGradient;
+    
+    // Lower the arms as the shoulder go up
+    let leftArm = this.model.boneDict['Left arm'];
+    let rightArm = this.model.boneDict['Right arm'];
+    
+    if (shoulderGradient > 0) {
+      // leftArm.rotation.z = Math.max(-0.5, shoulderGradient * leftArm.rotation.z);
+    }
+    
+    showXValue(shoulderGradient);
   }
   
   guideUpperBodyMovement(faces: Face[], poses: Pose[]) {
