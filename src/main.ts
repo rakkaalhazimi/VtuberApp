@@ -127,7 +127,8 @@ class App {
     // GUI
     let gui = new AppGUI();
     gui.createMorphGUI(model);
-    // model.morph('Wink', 1);
+    gui.createBoneGUI(model);
+    model.morph('Grin', 1);
     
     // Canvas
     let [canvas, canvasCtx] = await this.createCanvas();
