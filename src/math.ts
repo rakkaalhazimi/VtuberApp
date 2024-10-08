@@ -31,13 +31,24 @@ export function angleOfTriangle2D(a: number [], b: number[], c: number[]) {
     y: a[1] - b[1]
   };
   
-  let vectorCA = {
+  let vectorBC = {
     x: c[0] - b[0],
     y: c[1] - b[1]
   }
   
-  let dotProduct = (vectorBA.x * vectorCA.x) + (vectorBA.y + vectorCA.y);
+  let dotProduct = (vectorBA.x * vectorBC.x) + (vectorBA.y + vectorBC.y);
   let cosine = dotProduct / (lengthAB * lengthCB);
   let radian = Math.acos(cosine);
+  
+  // Determine acute or obscute angle with cross product
+  let crossProduct = (vectorBA.x * vectorBC.y) - (vectorBA.y * vectorBC.x);
+  let sign = Math.sign(crossProduct);
+  
+  // If positive sign, keep the radian.
+  // If negative sign, subtract the radian with 2 * pi.
+  if (sign < 0) {
+    radian = (2 * Math.PI) - radian;
+  }
+  
   return radian;
 }

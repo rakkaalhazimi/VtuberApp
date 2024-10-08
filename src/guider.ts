@@ -411,7 +411,7 @@ export class ModelMovementGuider {
     
     // Adjust the angle with 90 degree from human normal pose
     // and 45 degree from model default hand pose.
-    leftArm.rotation.z = leftShoulderAngle - (Math.PI / 2) - (Math.PI / 4);
+    leftArm.rotation.z = -leftShoulderAngle - (Math.PI / 2) - (Math.PI / 4);
     rightArm.rotation.z = -rightShoulderAngle + (Math.PI / 2) + (Math.PI / 4);
     
     
