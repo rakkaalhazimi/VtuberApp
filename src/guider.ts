@@ -381,11 +381,17 @@ export class ModelMovementGuider {
     let leftElbowPose = currentPose.keypoints[MovenetPosePoint.LEFT_ELBOW];
     let rightElbowPose = currentPose.keypoints[MovenetPosePoint.RIGHT_ELBOW];
     
+    let leftWristPose = currentPose.keypoints[MovenetPosePoint.LEFT_WRIST];
+    let rightWristPose = currentPose.keypoints[MovenetPosePoint.RIGHT_WRIST];
+    
     let leftShoulder = this.model.boneDict['Left shoulder'];
     let rightShoulder = this.model.boneDict['Right shoulder'];
     
     let leftArm = this.model.boneDict['Left arm'];
     let rightArm = this.model.boneDict['Right arm'];
+    
+    let leftElbow = this.model.boneDict['Left elbow'];
+    let rightElbow = this.model.boneDict['Right elbow'];
     
     // Raise shoulder up and down
     let shoulderGradient = gradient2D(
@@ -401,12 +407,14 @@ export class ModelMovementGuider {
       [rightShoulderPose.x, rightShoulderPose.y],
       [leftShoulderPose.x, leftShoulderPose.y],
       [leftElbowPose.x, leftElbowPose.y],
+      true
     );
     
     let rightShoulderAngle = angleOfTriangle2D(
       [leftShoulderPose.x, leftShoulderPose.y],
       [rightShoulderPose.x, rightShoulderPose.y],
       [rightElbowPose.x, rightElbowPose.y],
+      true
     );
     
     // Adjust the angle with 90 degree from human normal pose
@@ -414,6 +422,25 @@ export class ModelMovementGuider {
     leftArm.rotation.z = -leftShoulderAngle - (Math.PI / 2) - (Math.PI / 4);
     rightArm.rotation.z = -rightShoulderAngle + (Math.PI / 2) + (Math.PI / 4);
     
+    
+    // Rotate elbow
+    let leftElbowAngle = angleOfTriangle2D(
+      [leftShoulderPose.x, leftShoulderPose.y],
+      [leftElbowPose.x, leftElbowPose.y],
+      [leftWristPose.x, leftWristPose.y]
+    );
+    
+    let rightElbowAngle = angleOfTriangle2D(
+      [rightShoulderPose.x, rightShoulderPose.y],
+      [rightElbowPose.x, rightElbowPose.y],
+      [rightWristPose.x, rightWristPose.y]
+    );
+    
+    leftElbow.rotation.x = leftElbowAngle - Math.PI;
+    leftElbow.rotation.y = leftElbowAngle - Math.PI;
+    
+    rightElbow.rotation.x = rightElbowAngle - Math.PI;
+    rightElbow.rotation.y = -(rightElbowAngle - Math.PI);
     
     // Lower the arms as the shoulder go up
     
@@ -426,8 +453,8 @@ export class ModelMovementGuider {
     // }
     
     showXValue(shoulderGradient);
-    // showYValue(cosine);
-    showZValue(leftShoulderAngle);
+    showYValue(leftElbow.rotation.y);
+    showZValue(rightElbow.rotation.y);
   }
   
   guideUpperBodyMovement(faces: Face[], poses: Pose[]) {

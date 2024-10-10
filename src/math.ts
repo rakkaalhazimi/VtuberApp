@@ -14,7 +14,7 @@ export function gradient2D(a: number[], b: number[]) {
 }
 
 // Compute the angle of B in ABC line
-export function angleOfTriangle2D(a: number [], b: number[], c: number[]) {
+export function angleOfTriangle2D(a: number [], b: number[], c: number[], includeObscute: boolean = false) {
   
   let lengthAB = euclideanDistance2D(
     [a[0], a[1]], 
@@ -46,7 +46,7 @@ export function angleOfTriangle2D(a: number [], b: number[], c: number[]) {
   
   // If positive sign, keep the radian.
   // If negative sign, subtract the radian with 2 * pi.
-  if (sign < 0) {
+  if (sign < 0 && includeObscute) {
     radian = (2 * Math.PI) - radian;
   }
   
