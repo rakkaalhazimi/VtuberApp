@@ -123,9 +123,11 @@ export class PoseEstimation {
   async loadBlazePoseEstimationDetector() {
     console.log('Loading blaze pose detector...');
     this.modelType = poseDetection.SupportedModels.BlazePose;
+    // Forget about tfjs, use mediapipe for better performance
     let detectorConfig = {
       runtime: 'mediapipe',
       enableSmoothing: true,
+      solutionPath: './node_modules/@mediapipe/pose',
       modelType: 'lite',
     };
     this.detector = await poseDetection.createDetector(this.modelType, detectorConfig);
@@ -136,14 +138,12 @@ export class PoseEstimation {
   async estimatePose(video: HTMLVideoElement) {
     let poses = await this.detector.estimatePoses(video, {flipHorizontal: false});
     
-    if (this.modelType == poseDetection.SupportedModels.MoveNet) {
-      // Normalize keypoints for movenet model
-      for (let currentPose of poses) {
-        for (let keypoint of currentPose.keypoints) {
-          // Assuming the model uses a default size like 640x480 for the input.
-          keypoint.x = (keypoint.x / MODEL_INPUT_WIDTH) * this.videoWidth;
-          keypoint.y = (keypoint.y / MODEL_INPUT_HEIGHT) * this.videoHeight;
-        }
+    // Normalize keypoints for movenet and blazepose model with mediapipe
+    for (let currentPose of poses) {
+      for (let keypoint of currentPose.keypoints) {
+        // Assuming the model uses a default size like 640x480 for the input.
+        keypoint.x = (keypoint.x / MODEL_INPUT_WIDTH) * this.videoWidth;
+        keypoint.y = (keypoint.y / MODEL_INPUT_HEIGHT) * this.videoHeight;
       }
     }
     
