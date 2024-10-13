@@ -92,6 +92,8 @@ export enum MovenetPosePoint {
   RIGHT_ANKLE,
 }
 
+export type PosePoint = typeof BlazePosePoint | typeof MovenetPosePoint;
+
 const POSE_CONFIDENCE_SCORE = 0.5;
 const MODEL_INPUT_WIDTH = 640;
 const MODEL_INPUT_HEIGHT = 480;

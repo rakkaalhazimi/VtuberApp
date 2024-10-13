@@ -1,11 +1,12 @@
 import { Face, Keypoint } from '@tensorflow-models/face-landmarks-detection';
+import * as poseDetection from '@tensorflow-models/pose-detection';
 import { Pose } from '@tensorflow-models/pose-detection';
 
 import { FaceLandmark, LandmarkPoint } from './face-landmarks';
 import { euclideanDistance2D, gradient2D, angleOfTriangle2D } from './math';
 import { showXValue, showYValue, showZValue } from './metric';
 import { Model } from './model';
-import { MovenetPosePoint } from './pose-estimation';
+import { BlazePosePoint, MovenetPosePoint, PosePoint, PoseEstimation } from './pose-estimation';
 
 
 
@@ -31,10 +32,31 @@ const MAX_HAR_VOWEL_U = 1.150;
 export class ModelMovementGuider {
   public model: Model;
   public faceLandmark: FaceLandmark;
+  public poseEstimation: PoseEstimation;
+  public posePoint: PosePoint;
   
-  constructor(model: Model, faceLandmark: FaceLandmark) {
+  constructor(
+    model: Model, 
+    faceLandmark: FaceLandmark, 
+    poseEstimation: PoseEstimation
+  ) {
     this.model = model;
     this.faceLandmark = faceLandmark;
+    this.poseEstimation = poseEstimation;
+    
+    if (!this.poseEstimation.modelType) {
+      throw new Error(`poseEstimation ModelType is undefined, please load pose estimation detector first`);
+    }
+    
+    switch (this.poseEstimation.modelType) {
+      case (poseDetection.SupportedModels.BlazePose):
+        this.posePoint = BlazePosePoint;
+        break;
+      
+      case (poseDetection.SupportedModels.MoveNet):
+        this.posePoint = MovenetPosePoint
+        break;
+    }
   }
   
   // Shift coordinate smoothly by incrementing by
@@ -375,14 +397,14 @@ export class ModelMovementGuider {
   guideShoulderMovement(poses: Pose[]) {
     let currentPose = poses[0];
     
-    let leftShoulderPose = currentPose.keypoints[MovenetPosePoint.LEFT_SHOULDER];
-    let rightShoulderPose = currentPose.keypoints[MovenetPosePoint.RIGHT_SHOULDER];
+    let leftShoulderPose = currentPose.keypoints[this.posePoint.LEFT_SHOULDER];
+    let rightShoulderPose = currentPose.keypoints[this.posePoint.RIGHT_SHOULDER];
     
-    let leftElbowPose = currentPose.keypoints[MovenetPosePoint.LEFT_ELBOW];
-    let rightElbowPose = currentPose.keypoints[MovenetPosePoint.RIGHT_ELBOW];
+    let leftElbowPose = currentPose.keypoints[this.posePoint.LEFT_ELBOW];
+    let rightElbowPose = currentPose.keypoints[this.posePoint.RIGHT_ELBOW];
     
-    let leftWristPose = currentPose.keypoints[MovenetPosePoint.LEFT_WRIST];
-    let rightWristPose = currentPose.keypoints[MovenetPosePoint.RIGHT_WRIST];
+    let leftWristPose = currentPose.keypoints[this.posePoint.LEFT_WRIST];
+    let rightWristPose = currentPose.keypoints[this.posePoint.RIGHT_WRIST];
     
     let leftShoulder = this.model.boneDict['Left shoulder'];
     let rightShoulder = this.model.boneDict['Right shoulder'];

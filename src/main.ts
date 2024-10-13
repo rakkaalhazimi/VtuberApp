@@ -137,11 +137,12 @@ class App {
     let video = await this.showCamera();
     let faceLandmark = new FaceLandmark(video.width, video.height);
     await faceLandmark.loadFaceLandmarksDetector();
-    let moveGuider = new ModelMovementGuider(model, faceLandmark);
     
     let poseEstimation = new PoseEstimation(video.height, video.width);
-    await poseEstimation.loadMovenetPoseEstimationDetector();
-    // await poseEstimation.loadBlazePoseEstimationDetector();
+    // await poseEstimation.loadMovenetPoseEstimationDetector();
+    await poseEstimation.loadBlazePoseEstimationDetector();
+    
+    let moveGuider = new ModelMovementGuider(model, faceLandmark, poseEstimation);
     
     async function animate() {
       requestAnimationFrame(animate);
