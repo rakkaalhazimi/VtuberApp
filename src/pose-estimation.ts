@@ -124,9 +124,9 @@ export class PoseEstimation {
     console.log('Loading blaze pose detector...');
     this.modelType = poseDetection.SupportedModels.BlazePose;
     let detectorConfig = {
-      runtime: 'tfjs',
+      runtime: 'mediapipe',
       enableSmoothing: true,
-      modelType: 'full',
+      modelType: 'lite',
     };
     this.detector = await poseDetection.createDetector(this.modelType, detectorConfig);
     console.log('Blaze pose detector is loaded');
