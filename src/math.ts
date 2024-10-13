@@ -38,6 +38,8 @@ export function angleOfTriangle2D(a: number [], b: number[], c: number[], includ
   
   let dotProduct = (vectorBA.x * vectorBC.x) + (vectorBA.y + vectorBC.y);
   let cosine = dotProduct / (lengthAB * lengthCB);
+  // Math.acos can only receive value between -1 and 1
+  cosine = Math.max(-1, Math.min(1, cosine));
   let radian = Math.acos(cosine);
   
   // Determine acute or obscute angle with cross product
