@@ -398,10 +398,14 @@ export class ModelMovementGuider {
     let currentPose = poses[0];
     
     let leftShoulderPose = currentPose.keypoints[this.posePoint.LEFT_SHOULDER];
+    let leftShoulder3DPose = currentPose.keypoints3D![this.posePoint.LEFT_SHOULDER];
     let rightShoulderPose = currentPose.keypoints[this.posePoint.RIGHT_SHOULDER];
+    let rightShoulder3DPose = currentPose.keypoints3D![this.posePoint.RIGHT_SHOULDER];
     
     let leftElbowPose = currentPose.keypoints[this.posePoint.LEFT_ELBOW];
+    let leftElbow3DPose = currentPose.keypoints3D![this.posePoint.LEFT_ELBOW];
     let rightElbowPose = currentPose.keypoints[this.posePoint.RIGHT_ELBOW];
+    let rightElbow3DPose = currentPose.keypoints3D![this.posePoint.RIGHT_ELBOW];
     
     let leftWristPose = currentPose.keypoints[this.posePoint.LEFT_WRIST];
     let rightWristPose = currentPose.keypoints[this.posePoint.RIGHT_WRIST];
@@ -415,6 +419,7 @@ export class ModelMovementGuider {
     let leftElbow = this.model.boneDict['Left elbow'];
     let rightElbow = this.model.boneDict['Right elbow'];
     
+    // [Shoulder Up and Down]
     // Raise shoulder up and down
     let shoulderGradient = gradient2D(
       [leftShoulderPose.x, leftShoulderPose.y],
@@ -423,46 +428,108 @@ export class ModelMovementGuider {
     
     leftShoulder.rotation.z = this.smoothMovement(shoulderGradient, leftShoulder.rotation.z, 0.4);
     rightShoulder.rotation.z = this.smoothMovement(shoulderGradient, rightShoulder.rotation.z, 0.4);
+    // [End Shoulder Up and Down]
     
-    // Rotate arms based on shoulder angle
-    let leftShoulderAngle = angleOfTriangle2D(
+    // [Arms Up and Down]
+    // Rotate arms up and down based on shoulder angle
+    let leftShoulderAngleZ = angleOfTriangle2D(
       [rightShoulderPose.x, rightShoulderPose.y],
       [leftShoulderPose.x, leftShoulderPose.y],
       [leftElbowPose.x, leftElbowPose.y],
-      true
+      true  // include obscute angle
     );
     
-    let rightShoulderAngle = angleOfTriangle2D(
+    let rightShoulderAngleZ = angleOfTriangle2D(
       [leftShoulderPose.x, leftShoulderPose.y],
       [rightShoulderPose.x, rightShoulderPose.y],
       [rightElbowPose.x, rightElbowPose.y],
-      true
+      true  // include obscute angle
     );
     
     // Adjust the angle with 90 degree from human normal pose
     // and 45 degree from model default hand pose.
-    leftArm.rotation.z = -leftShoulderAngle - (Math.PI / 2) - (Math.PI / 4);
-    rightArm.rotation.z = -rightShoulderAngle + (Math.PI / 2) + (Math.PI / 4);
+    leftArm.rotation.z = 
+      this.smoothMovement(
+        -leftShoulderAngleZ - (Math.PI / 2) - (Math.PI / 4),
+        leftArm.rotation.z,
+        0.1
+    );
+    rightArm.rotation.z = 
+      this.smoothMovement(
+        -rightShoulderAngleZ + (Math.PI / 2) + (Math.PI / 4),
+        rightArm.rotation.z,
+        0.1
+    );
+    // [End Arms Up and Down]
     
+    // [Arms Forward and Backward]
+    // Bend arms forward and backward based on elbow angle.
+    let leftShoulderAngleX = angleOfTriangle2D(
+      [leftElbow3DPose.y, leftElbow3DPose.z!],
+      [leftShoulder3DPose.y, leftShoulder3DPose.z!],
+      [leftElbow3DPose.y, leftShoulder3DPose.z!],
+      // true  // include obscute angle
+    );
     
+    let rightShoulderAngleX = angleOfTriangle2D(
+      [rightElbow3DPose.y, rightElbow3DPose.z!],
+      [rightShoulder3DPose.y, rightShoulder3DPose.z!],
+      [rightElbow3DPose.y, rightShoulder3DPose.z!],
+      // true  // include obscute angle
+    );
+    
+    leftArm.rotation.x = this.smoothMovement(-leftShoulderAngleX, leftArm.rotation.x, 0.1);
+    rightArm.rotation.x = this.smoothMovement(-rightShoulderAngleX, rightArm.rotation.x, 0.1);
+    // [End Arms Forward and Backward]
+    
+    // [Elbow Rotation]
     // Rotate elbow
+    let leftElbowAngleX = angleOfTriangle2D(
+      [leftShoulderPose.y, leftShoulderPose.z!],
+      [leftElbowPose.y, leftElbowPose.z!],
+      [leftWristPose.y, leftWristPose.z!],
+      true  // include obscute angle
+    );
+    
+    let rightElbowAngleX = angleOfTriangle2D(
+      [rightShoulderPose.y, rightShoulderPose.z!],
+      [rightElbowPose.y, rightElbowPose.z!],
+      [rightWristPose.y, rightWristPose.z!],
+      true  // include obscute angle
+    );
+    
     let leftElbowAngle = angleOfTriangle2D(
       [leftShoulderPose.x, leftShoulderPose.y],
       [leftElbowPose.x, leftElbowPose.y],
-      [leftWristPose.x, leftWristPose.y]
+      [leftWristPose.x, leftWristPose.y],
+      true
     );
     
     let rightElbowAngle = angleOfTriangle2D(
       [rightShoulderPose.x, rightShoulderPose.y],
       [rightElbowPose.x, rightElbowPose.y],
-      [rightWristPose.x, rightWristPose.y]
+      [rightWristPose.x, rightWristPose.y],
+      true
     );
     
-    leftElbow.rotation.x = leftElbowAngle - Math.PI;
-    leftElbow.rotation.y = leftElbowAngle - Math.PI;
+    // When angle is 180 degree, value is 0
+    // 
     
-    rightElbow.rotation.x = rightElbowAngle - Math.PI;
-    rightElbow.rotation.y = -(rightElbowAngle - Math.PI);
+    // leftElbow.rotation.x = 
+    //   this.smoothMovement(
+    //     leftElbowAngle - Math.PI, 
+    //     leftElbow.rotation.x, 
+    //     0.1
+    // );
+    // leftElbow.rotation.y = 
+    //   this.smoothMovement(
+    //     leftElbowAngle - Math.PI, 
+    //     leftElbow.rotation.y, 
+    //     0.1
+    // );
+    
+    // rightElbow.rotation.x = rightElbowAngle - Math.PI;
+    // rightElbow.rotation.y = -(rightElbowAngle - Math.PI);
     
     // Lower the arms as the shoulder go up
     
@@ -474,9 +541,9 @@ export class ModelMovementGuider {
     //   rightArm.rotation.z = this.smoothMovement(0.8, rightArm.rotation.z, 0.1);
     // }
     
-    showXValue(shoulderGradient);
-    showYValue(leftElbow.rotation.y);
-    showZValue(rightElbow.rotation.y);
+    showXValue(leftShoulderAngleX);
+    // showYValue(leftElbow3DPose.y);
+    // showZValue(leftElbow3DPose.z!);
   }
   
   guideUpperBodyMovement(faces: Face[], poses: Pose[]) {
