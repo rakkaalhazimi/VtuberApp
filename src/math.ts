@@ -183,3 +183,18 @@ export function rotationMatrixToEulerAnglesNew(R: THREE.Matrix3) {
 
   return [alpha, beta, gamma];
 }
+
+export function eulerAnglesFromVectorMovement(init: THREE.Vector3, target: THREE.Vector3) {
+  let axis = crossProduct(init, target);
+  let axisNorm = axis.normalize();
+  
+  let dot = init.dot(target);
+  let cosine = dot / (init.length() * target.length());
+  let theta = Math.acos(cosine);
+  let skew = getSkewSymmetricMatrix(axisNorm);
+  let R = getRotationMatrix(theta, skew);
+  
+  let [alpha, beta, gamma] = rotationMatrixToEulerAnglesNew(R);
+  
+  return [alpha, beta, gamma];
+}

@@ -12,7 +12,8 @@ import {
   getSkewSymmetricMatrix, 
   getRotationMatrix, 
   crossProduct,
-  rotationMatrixToEulerAnglesNew } from './math';
+  rotationMatrixToEulerAnglesNew,
+  eulerAnglesFromVectorMovement } from './math';
 import { showXValue, showYValue, showZValue } from './metric';
 import { Model } from './model';
 import { BlazePosePoint, MovenetPosePoint, PosePoint, PoseEstimation } from './pose-estimation';
@@ -680,16 +681,7 @@ export class ModelMovementGuider {
     // let init = new THREE.Vector3(0.5, -0.5, 0);
     // let target = new THREE.Vector3(0.5, 0.5, 0.5);
     
-    let axis = crossProduct(init, target);
-    let axisNorm = axis.normalize();
-    
-    let dot = init.dot(target);
-    let cosine = dot / (init.length() * target.length());
-    let theta = Math.acos(cosine);
-    let skew = getSkewSymmetricMatrix(axisNorm);
-    let R = getRotationMatrix(theta, skew);
-    
-    let [alpha, beta, gamma] = rotationMatrixToEulerAnglesNew(R);
+    let [alpha, beta, gamma] = eulerAnglesFromVectorMovement(init, target);
     
     leftArm.rotation.x = this.smoothMovement(alpha, leftArm.rotation.x, 0.1);
     leftArm.rotation.y = this.smoothMovement(-beta, leftArm.rotation.y, 0.1);
