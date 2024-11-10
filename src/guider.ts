@@ -1,9 +1,17 @@
+import * as THREE from 'three';
 import { Face, Keypoint } from '@tensorflow-models/face-landmarks-detection';
 import * as poseDetection from '@tensorflow-models/pose-detection';
 import { Pose } from '@tensorflow-models/pose-detection';
 
 import { FaceLandmark, LandmarkPoint } from './face-landmarks';
-import { euclideanDistance2D, gradient2D, angleOfTriangle2D } from './math';
+import { 
+  euclideanDistance2D, 
+  euclideanDistance3D, 
+  gradient2D, 
+  angleOfTriangle2D, 
+  getSkewSymmetricMatrix, 
+  getRotationMatrix, 
+  crossProduct } from './math';
 import { showXValue, showYValue, showZValue } from './metric';
 import { Model } from './model';
 import { BlazePosePoint, MovenetPosePoint, PosePoint, PoseEstimation } from './pose-estimation';
@@ -426,8 +434,8 @@ export class ModelMovementGuider {
       [rightShoulderPose.x, rightShoulderPose.y]
     );
     
-    leftShoulder.rotation.z = this.smoothMovement(shoulderGradient, leftShoulder.rotation.z, 0.4);
-    rightShoulder.rotation.z = this.smoothMovement(shoulderGradient, rightShoulder.rotation.z, 0.4);
+    // leftShoulder.rotation.z = this.smoothMovement(shoulderGradient, leftShoulder.rotation.z, 0.4);
+    // rightShoulder.rotation.z = this.smoothMovement(shoulderGradient, rightShoulder.rotation.z, 0.4);
     // [End Shoulder Up and Down]
     
     // [Arms Up and Down]
@@ -448,26 +456,88 @@ export class ModelMovementGuider {
     
     // Adjust the angle with 90 degree from human normal pose
     // and 45 degree from model default hand pose.
-    leftArm.rotation.z = 
-      this.smoothMovement(
-        -leftShoulderAngleZ - (Math.PI / 2) - (Math.PI / 4),
-        leftArm.rotation.z,
-        0.1
-    );
-    rightArm.rotation.z = 
-      this.smoothMovement(
-        -rightShoulderAngleZ + (Math.PI / 2) + (Math.PI / 4),
-        rightArm.rotation.z,
-        0.1
-    );
+    // leftArm.rotation.z = 
+    //   this.smoothMovement(
+    //     -leftShoulderAngleZ - (Math.PI / 2) - (Math.PI / 4),
+    //     leftArm.rotation.z,
+    //     0.1
+    // );
+    // rightArm.rotation.z = 
+    //   this.smoothMovement(
+    //     -rightShoulderAngleZ + (Math.PI / 2) + (Math.PI / 4),
+    //     rightArm.rotation.z,
+    //     0.1
+    // );
     // [End Arms Up and Down]
     
     // [Arms Forward and Backward]
     // Bend arms forward and backward based on elbow angle.
+    // TODO: Take a note that the rotation X and Y will follow the direction of the vector.
+    //       If you expect rotation X to go forward and backward when hands is down.
+    //       You might find that when the hands is a middle up, rotating X will only twist the arm.
+    
+    let shoulderDistance = euclideanDistance2D(
+      [leftShoulder3DPose.x, leftShoulder3DPose.y],
+      [rightShoulder3DPose.x, rightShoulder3DPose.y]
+    );
+    
+    // Create point below shoulder
+    let leftBelowShoulder3DPose = {
+      x: 0.1,
+      y: (shoulderDistance / 2),
+      z: 0
+    };
+    
+    let leftBelowShoulderLength = euclideanDistance3D(
+      [0, 0, 0],
+      [leftBelowShoulder3DPose.x, leftBelowShoulder3DPose.y, leftBelowShoulder3DPose.z]
+    )
+    
+    leftBelowShoulder3DPose.x /= leftBelowShoulderLength;
+    leftBelowShoulder3DPose.y /= leftBelowShoulderLength;
+    leftBelowShoulder3DPose.z /= leftBelowShoulderLength;
+    
+    let leftElbow3DPoseRelative = {
+      x: leftElbow3DPose.x - leftShoulder3DPose.x,
+      y: leftElbow3DPose.y - leftShoulder3DPose.y,
+      z: leftElbow3DPose.z! - leftShoulder3DPose.z!,
+    }
+    
+    let leftElbowLength = euclideanDistance3D(
+      [0, 0, 0],
+      [leftElbow3DPoseRelative.x, leftElbow3DPoseRelative.y, leftElbow3DPoseRelative.z]
+    )
+    
+    leftElbow3DPoseRelative.x /= leftElbowLength;
+    leftElbow3DPoseRelative.y /= leftElbowLength;
+    leftElbow3DPoseRelative.z /= leftElbowLength;
+    
+    let axisOfRotation = {
+      x: (leftBelowShoulder3DPose.y * leftElbow3DPoseRelative.z) - (leftBelowShoulder3DPose.z * leftElbow3DPoseRelative.y),
+      y: (leftBelowShoulder3DPose.z * leftElbow3DPoseRelative.x) - (leftBelowShoulder3DPose.x * leftElbow3DPoseRelative.z),
+      z: (leftBelowShoulder3DPose.x * leftElbow3DPoseRelative.y) - (leftBelowShoulder3DPose.y * leftElbow3DPoseRelative.x),
+    };
+    
+    let rotationAngle = 
+      (leftBelowShoulder3DPose.x * leftElbow3DPoseRelative.x) +
+      (leftBelowShoulder3DPose.y * leftElbow3DPoseRelative.y) +
+      (leftBelowShoulder3DPose.z * leftElbow3DPoseRelative.z);
+      
+    // let quaternion = new THREE.Quaternion();
+    // quaternion.setFromAxisAngle(new THREE.Vector3(
+    //   axisOfRotation.x, axisOfRotation.y, axisOfRotation.z),
+    //   rotationAngle
+    // );
+    // leftArm.setRotationFromQuaternion(quaternion);
+    
+    leftArm.rotation.x = this.smoothMovement(axisOfRotation.x, leftArm.rotation.x, 0.1);
+    // leftArm.rotation.y = this.smoothMovement(axisOfRotation.y, leftArm.rotation.y, 0.1);
+    leftArm.rotation.z = this.smoothMovement(-axisOfRotation.z, leftArm.rotation.z, 0.1);
+    
     let leftShoulderAngleX = angleOfTriangle2D(
-      [leftElbow3DPose.y, leftElbow3DPose.z!],
-      [leftShoulder3DPose.y, leftShoulder3DPose.z!],
-      [leftElbow3DPose.y, leftShoulder3DPose.z!],
+      [leftBelowShoulder3DPose.z!, leftBelowShoulder3DPose.y],
+      [leftShoulder3DPose.z!, leftShoulder3DPose.y],
+      [leftElbow3DPose.z!, leftElbow3DPose.y],
       // true  // include obscute angle
     );
     
@@ -478,9 +548,28 @@ export class ModelMovementGuider {
       // true  // include obscute angle
     );
     
-    leftArm.rotation.x = this.smoothMovement(-leftShoulderAngleX, leftArm.rotation.x, 0.1);
-    rightArm.rotation.x = this.smoothMovement(-rightShoulderAngleX, rightArm.rotation.x, 0.1);
+    // leftArm.rotation.x = this.smoothMovement(-leftShoulderAngleX, leftArm.rotation.x, 0.1);
+    // rightArm.rotation.x = this.smoothMovement(-rightShoulderAngleX, rightArm.rotation.x, 0.1);
     // [End Arms Forward and Backward]
+    
+    // [Arms Inward and Outward]
+    // Bend arms inward and outward based on elbow angle.
+    let leftShoulderAngleY = angleOfTriangle2D(
+      [rightShoulder3DPose.z!, rightShoulder3DPose.x],
+      [leftShoulder3DPose.z!, leftShoulder3DPose.x],
+      [leftElbow3DPose.z!, leftShoulder3DPose.x],
+      // true  // include obscute angle
+    );
+    
+    let rightShoulderAngleY = angleOfTriangle2D(
+      [rightElbow3DPose.z!, rightElbow3DPose.x],
+      [rightShoulder3DPose.z!, rightShoulder3DPose.x],
+      [rightElbow3DPose.z!, rightShoulder3DPose.x],
+      // true  // include obscute angle
+    );
+    
+    // leftArm.rotation.y = this.smoothMovement(leftShoulderAngleY, leftArm.rotation.y, 0.1);
+    // rightArm.rotation.y = this.smoothMovement(rightShoulderAngleY, rightArm.rotation.y, 0.1);
     
     // [Elbow Rotation]
     // Rotate elbow
@@ -541,9 +630,75 @@ export class ModelMovementGuider {
     //   rightArm.rotation.z = this.smoothMovement(0.8, rightArm.rotation.z, 0.1);
     // }
     
-    showXValue(leftShoulderAngleX);
-    // showYValue(leftElbow3DPose.y);
-    // showZValue(leftElbow3DPose.z!);
+    showXValue(axisOfRotation.x);
+    showYValue(axisOfRotation.y);
+    showZValue(axisOfRotation.z);
+  }
+  
+  guideShoulderMovementNew(poses: Pose[]) {
+    let currentPose = poses[0];
+    
+    let leftShoulderPose = currentPose.keypoints[this.posePoint.LEFT_SHOULDER];
+    let leftShoulder3DPose = currentPose.keypoints3D![this.posePoint.LEFT_SHOULDER];
+    let rightShoulderPose = currentPose.keypoints[this.posePoint.RIGHT_SHOULDER];
+    let rightShoulder3DPose = currentPose.keypoints3D![this.posePoint.RIGHT_SHOULDER];
+    
+    let leftElbowPose = currentPose.keypoints[this.posePoint.LEFT_ELBOW];
+    let leftElbow3DPose = currentPose.keypoints3D![this.posePoint.LEFT_ELBOW];
+    let rightElbowPose = currentPose.keypoints[this.posePoint.RIGHT_ELBOW];
+    let rightElbow3DPose = currentPose.keypoints3D![this.posePoint.RIGHT_ELBOW];
+    
+    let leftWristPose = currentPose.keypoints[this.posePoint.LEFT_WRIST];
+    let rightWristPose = currentPose.keypoints[this.posePoint.RIGHT_WRIST];
+    
+    let leftShoulder = this.model.boneDict['Left shoulder'];
+    let rightShoulder = this.model.boneDict['Right shoulder'];
+    
+    let leftArm = this.model.boneDict['Left arm'];
+    let rightArm = this.model.boneDict['Right arm'];
+    
+    let leftElbow = this.model.boneDict['Left elbow'];
+    let rightElbow = this.model.boneDict['Right elbow'];
+    
+    // Relative to shoulder
+    let leftElbowIdleVector = new THREE.Vector3(
+      Math.cos(Math.PI / 4 * 7), 
+      -Math.sin(Math.PI / 4 * 7),
+      0
+    );
+    
+    let leftElbow3DRelativeVector = new THREE.Vector3(
+      leftElbow3DPose.x - leftShoulder3DPose.x,
+      leftElbow3DPose.y - leftShoulder3DPose.y,
+      leftElbow3DPose.z! - leftShoulder3DPose.z!,
+    );
+    
+    
+    let init = leftElbowIdleVector;
+    let target = leftElbow3DRelativeVector;
+    // let init = new THREE.Vector3(0.5, -0.5, 0);
+    // let target = new THREE.Vector3(0.5, 0.5, 0.5);
+    
+    let axis = crossProduct(init, target);
+    let axisNorm = axis.normalize();
+    
+    let dot = init.dot(target);
+    let cosine = dot / (init.length() * target.length());
+    let theta = Math.acos(cosine);
+    let skew = getSkewSymmetricMatrix(axisNorm);
+    let R = getRotationMatrix(theta, skew);
+    
+    let alpha = Math.atan2(R.elements[7], R.elements[8]);
+    let beta = Math.atan2(-R.elements[6], Math.sqrt(R.elements[7]**2 + R.elements[8]**2));
+    let gamma = Math.atan2(R.elements[3], R.elements[0]);
+    
+    leftArm.rotation.x = this.smoothMovement(alpha, leftArm.rotation.x, 0.1);
+    leftArm.rotation.y = this.smoothMovement(-beta, leftArm.rotation.y, 0.1);
+    leftArm.rotation.z = this.smoothMovement(-gamma, leftArm.rotation.z, 0.1);
+    
+    showXValue(alpha);
+    showYValue(beta);
+    showZValue(gamma);
   }
   
   guideUpperBodyMovement(faces: Face[], poses: Pose[]) {
@@ -571,13 +726,13 @@ export class ModelMovementGuider {
     // coor.y = (coor.y - this.halfVideoHeight) / this.halfVideoHeight;
     // coor.z = (coor.z! - this.initFaceZ) / this.initFaceZ;
     
-    console.log(origin.x, origin.y);
+    // console.log(origin.x, origin.y);
     
     let upperBody = this.model.boneDict['Upper body'];
     let head = this.model.boneDict['Head'];
     
     // Rotate upper body left and right
-    upperBody.rotation.z += this.shiftCoordinateNew(upperBody.rotation.z, origin.x);
+    // upperBody.rotation.z += this.shiftCoordinateNew(upperBody.rotation.z, origin.x);
     
     // Rotate upper body forward and backward;
     // upperBody.rotation.x += this.shiftCoordinateNew(upperBody.rotation.x, origin.z!);
