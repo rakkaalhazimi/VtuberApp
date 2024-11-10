@@ -160,3 +160,26 @@ export function rotationMatrixToEulerAngles(R: number[][]) {
 
   return [alpha, beta, gamma];
 }
+
+export function rotationMatrixToEulerAnglesNew(R: THREE.Matrix3) {
+  // Compute sy (sin(y) and cos(y)) to check for gimbal lock
+  const sy = Math.sqrt(R.elements[0] * R.elements[0] + R.elements[3] * R.elements[3]);
+
+  let singular = sy < 1e-6; // If sy is close to zero, we have a gimbal lock
+
+  let alpha, beta, gamma;
+
+  if (!singular) {
+    // Normal case: No gimbal lock
+    alpha = Math.atan2(R.elements[7], R.elements[8]);   // Rotation around X-axis
+    beta = Math.atan2(-R.elements[6], sy);              // Rotation around Y-axis
+    gamma = Math.atan2(R.elements[3], R.elements[0]);   // Rotation around Z-axis
+  } else {
+    // Gimbal lock: Set alpha to 0 and calculate beta and gamma differently
+    alpha = 0;
+    beta = Math.atan2(-R.elements[7], sy);
+    gamma = Math.atan2(-R.elements[5], R.elements[4]);
+  }
+
+  return [alpha, beta, gamma];
+}

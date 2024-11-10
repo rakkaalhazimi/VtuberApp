@@ -11,7 +11,8 @@ import {
   angleOfTriangle2D, 
   getSkewSymmetricMatrix, 
   getRotationMatrix, 
-  crossProduct } from './math';
+  crossProduct,
+  rotationMatrixToEulerAnglesNew } from './math';
 import { showXValue, showYValue, showZValue } from './metric';
 import { Model } from './model';
 import { BlazePosePoint, MovenetPosePoint, PosePoint, PoseEstimation } from './pose-estimation';
@@ -688,9 +689,7 @@ export class ModelMovementGuider {
     let skew = getSkewSymmetricMatrix(axisNorm);
     let R = getRotationMatrix(theta, skew);
     
-    let alpha = Math.atan2(R.elements[7], R.elements[8]);
-    let beta = Math.atan2(-R.elements[6], Math.sqrt(R.elements[7]**2 + R.elements[8]**2));
-    let gamma = Math.atan2(R.elements[3], R.elements[0]);
+    let [alpha, beta, gamma] = rotationMatrixToEulerAnglesNew(R);
     
     leftArm.rotation.x = this.smoothMovement(alpha, leftArm.rotation.x, 0.1);
     leftArm.rotation.y = this.smoothMovement(-beta, leftArm.rotation.y, 0.1);
