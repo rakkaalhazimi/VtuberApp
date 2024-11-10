@@ -637,30 +637,17 @@ export class ModelMovementGuider {
     showZValue(axisOfRotation.z);
   }
   
-  guideShoulderMovementNew(poses: Pose[]) {
+  guideArmsMovement(poses: Pose[]) {
     let currentPose = poses[0];
     
-    let leftShoulderPose = currentPose.keypoints[this.posePoint.LEFT_SHOULDER];
     let leftShoulder3DPose = currentPose.keypoints3D![this.posePoint.LEFT_SHOULDER];
-    let rightShoulderPose = currentPose.keypoints[this.posePoint.RIGHT_SHOULDER];
     let rightShoulder3DPose = currentPose.keypoints3D![this.posePoint.RIGHT_SHOULDER];
     
-    let leftElbowPose = currentPose.keypoints[this.posePoint.LEFT_ELBOW];
     let leftElbow3DPose = currentPose.keypoints3D![this.posePoint.LEFT_ELBOW];
-    let rightElbowPose = currentPose.keypoints[this.posePoint.RIGHT_ELBOW];
     let rightElbow3DPose = currentPose.keypoints3D![this.posePoint.RIGHT_ELBOW];
-    
-    let leftWristPose = currentPose.keypoints[this.posePoint.LEFT_WRIST];
-    let rightWristPose = currentPose.keypoints[this.posePoint.RIGHT_WRIST];
-    
-    let leftShoulder = this.model.boneDict['Left shoulder'];
-    let rightShoulder = this.model.boneDict['Right shoulder'];
     
     let leftArm = this.model.boneDict['Left arm'];
     let rightArm = this.model.boneDict['Right arm'];
-    
-    let leftElbow = this.model.boneDict['Left elbow'];
-    let rightElbow = this.model.boneDict['Right elbow'];
     
     // Relative to shoulder
     let leftElbowIdleVector = new THREE.Vector3(
