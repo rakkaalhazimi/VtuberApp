@@ -1,4 +1,3 @@
-import '@tensorflow/tfjs-backend-webgl';
 import { 
   createDetector,
   Face,
@@ -210,8 +209,13 @@ export class FaceLandmark {
   
   async loadFaceLandmarksDetector() {
     console.log('Loading face landmarks detector...');
+    let modelType = SupportedModels.MediaPipeFaceMesh;
+    let detectorConfig = {
+      runtime: 'mediapipe',
+      solutionPath: './node_modules/@mediapipe/face_mesh'
+    }
     //@ts-expect-error
-    this.detector = await createDetector(SupportedModels.MediaPipeFaceMesh, {runtime: 'tfjs'});
+    this.detector = await createDetector(modelType, detectorConfig);
     console.log('Face landmarks detector loaded.');
     return this.detector;
   }
