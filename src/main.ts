@@ -98,7 +98,10 @@ class App {
     
     // Load model
     let model = new Model();
-    let mikuModel = await model.loadModel('assets/miku/miku_v2.pmd');
+    // let mikuModel = await model.loadModel('assets/miku/miku_v2.pmd');
+    // let mikuModel = await model.loadModel('assets/alpha/alpha.pmx');
+    // let mikuModel = await model.loadModel('assets/female_rover/Female Rover1.01.pmx');
+    let mikuModel = await model.loadModel('assets/feixiao/星穹铁道—飞霄.pmx');
     scene.add(mikuModel);
     
     // Model animation helper
