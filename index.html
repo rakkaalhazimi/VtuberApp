@@ -16,13 +16,14 @@
 </head>
 <body>
   <div id="main-render"></div>
+  <video id="video" src="" width="360" height="270" autoplay></video>
+  <!-- <video id="video" src="" width="360" height="270" autoplay style="visibility: hidden;"></video> -->
+  <canvas id="video-face-landmark" width="360" height="270"></canvas>
   <div id="coordinate">
     <span id="x-coordinate">0</span>
     <span id="y-coordinate">0</span>
     <span id="z-coordinate">0</span>
   </div>
-  <video id="video" src="" width="360" height="270" autoplay></video>
-  <canvas id="video-face-landmark" width="360" height="270"></canvas>
   
   <script type="module" src="src/main.ts"></script>
 </body>
