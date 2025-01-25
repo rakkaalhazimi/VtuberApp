@@ -95,6 +95,8 @@ class App {
     // Background color
     scene.background = new THREE.Color(0x111827);
     
+    // // Track mouse movement
+    // await this.trackMouseCoordinate();
     
     // Load model
     let model = new Model();
@@ -126,6 +128,59 @@ class App {
     let rightArm = model.boneDict['Right arm'];
     leftArm.rotation.z = -0.5;
     rightArm.rotation.z = 0.5;
+    
+    // Hands up
+    // leftArm.rotation.x = -1.03;
+    // leftArm.rotation.y = -1.24;
+    // leftArm.rotation.z = 1.16;
+    
+    // Bones
+    // let bones: any[] = [];
+    // for (let key in model.boneDict) {
+    //   bones.push(model.boneDict[key]);
+    // }
+    // console.log("Bones: ", bones);
+    
+    // Draw sphere on left arm bone
+    // let geometry = new THREE.SphereGeometry( 1, 32, 16 ); 
+    // let material = new THREE.MeshBasicMaterial( { color: 0xffff00 } ); 
+    // let sphere = new THREE.Mesh( geometry, material );
+    // let position = new THREE.Vector3();
+    // rightArm.getWorldPosition(position);
+    // console.log(position.x, position.y, position.z);
+    // sphere.position.x = position.x;
+    // sphere.position.y = position.y;
+    // sphere.position.z = position.z;
+    // scene.add( sphere );
+    
+    // let boneSphereMap = new Map();
+    // boneSphereMap.set(sphere.id, rightArm.id);
+    
+    
+    // Raycasting
+    let raycaster = new THREE.Raycaster();
+    let mouse = new THREE.Vector2();
+    
+    // window.addEventListener('click', (event) => {
+    //   // Calculate mouse position in normalized device coordinates (-1 to +1)
+    //   mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    //   mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+  
+    //   raycaster.setFromCamera(mouse, camera);
+    //   console.log(mouse.x, mouse.y);
+  
+    //   // Check for intersections with the bones
+    //   // const intersects = raycaster.intersectObjects(bones, true);
+    //   const intersects = raycaster.intersectObjects([sphere]);
+    //   console.log("Intersects: ", intersects);
+  
+    //   if (intersects.length > 0) {
+    //       const boneId = boneSphereMap.get(intersects[0].object.id);
+    //       const selectedBone = scene.getObjectById(boneId)!;
+    //       // Rotate or manipulate the selected bone
+    //       selectedBone.rotation.x += Math.PI / 4; // example rotation
+    //   }
+    // });
     
     // GUI
     let gui = new AppGUI();

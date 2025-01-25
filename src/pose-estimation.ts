@@ -183,7 +183,7 @@ export class PoseEstimation {
       // }
       
       // Draw circle for keypoint
-      // console.log(keypoint.name, keypoint.score, keypoint.x, keypoint.y);
+      // console.log(keypoint.name, keypoint.score, keypoint.x, keypoint.y, keypoint.z!);
       let {x, y} = keypoint;
       ctx.beginPath();
       ctx.arc(x, y, 3, 0, 2 * Math.PI);
