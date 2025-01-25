@@ -206,12 +206,20 @@ class App {
       requestAnimationFrame(animate);
       
       let faces = await faceLandmark.estimateFaces(video);
+      let poses = await poseEstimation.estimatePose(video);
       
       // Draw face landmarks
       // canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
       // faceLandmark.drawFaceLandmarks(canvasCtx, faces);
+      // poseEstimation.drawPoseLandmarks(canvasCtx, poses);
       
-      moveGuider.guideMovement(faces);
+      moveGuider.guideHeadRotation(faces);
+      moveGuider.guideBlinking(faces);
+      moveGuider.guideMouthMovement(faces);
+      // moveGuider.guideUpperBodyMovement(faces, poses);
+      // moveGuider.guideUpperBodyMovement([], poses);
+      // moveGuider.guideShoulderMovement(poses);
+      moveGuider.guideArmsMovement(poses);
       
       // let upperBody = model.boneDict['Upper body'];
       // upperBody.rotation.z += 0.1;
