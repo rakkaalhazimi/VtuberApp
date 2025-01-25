@@ -14,6 +14,15 @@ Simulate virtual youtuber by moving character models based on the human motion.
    npm run start
    ```
 
+## THREE Js Coordinate
+```
+from left-top to right-down
+up - y++
+down - y++
+left - x--
+right - x++
+```
+
 ## Credits
 1. [OpenVtuber](https://github.com/1996scarlet/OpenVtuber/tree/master)  
     It helps me on showing how to move the mmd model skeletons.
