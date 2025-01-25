@@ -651,32 +651,87 @@ export class ModelMovementGuider {
     
     // Relative to shoulder
     let leftElbowIdleVector = new THREE.Vector3(
-      Math.cos(Math.PI / 4 * 7), 
-      -Math.sin(Math.PI / 4 * 7),
+      Math.cos(Math.PI / 4 * 7), // default pi/4*7
+      Math.sin(Math.PI / 4 * 7),
+      0
+    );
+    
+    let rightElbowIdleVector = new THREE.Vector3(
+      Math.cos(Math.PI / 4 * 5), 
+      Math.sin(Math.PI / 4 * 5),
       0
     );
     
     let leftElbow3DRelativeVector = new THREE.Vector3(
       leftElbow3DPose.x - leftShoulder3DPose.x,
-      leftElbow3DPose.y - leftShoulder3DPose.y,
-      leftElbow3DPose.z! - leftShoulder3DPose.z!,
+      -(leftElbow3DPose.y - leftShoulder3DPose.y),
+      -(leftElbow3DPose.z! - leftShoulder3DPose.z!),
+    );
+    
+    // Test with target vector to see that the movement
+    // is correct.
+    // T-Pose
+    let leftElbow3DTPose = new THREE.Vector3(
+      Math.cos(Math.PI * 2),
+      Math.sin(Math.PI * 2),
+      0,
+    );
+    
+    // Point Forward
+    let leftElbow3DPointingVector = new THREE.Vector3(
+      0.1,   // X: Slight tilt to the right
+      -0.56,  // Y: Slight downward movement
+      1.99   // Z: Forward movement
     );
     
     
-    let init = leftElbowIdleVector;
-    let target = leftElbow3DRelativeVector;
+    let rightElbow3DRelativeVector = new THREE.Vector3(
+      rightElbow3DPose.x - rightShoulder3DPose.x,
+      -(rightElbow3DPose.y - rightShoulder3DPose.y),
+      -(rightElbow3DPose.z! - rightShoulder3DPose.z!),
+    );
+    
+    
+    let initLeft = leftElbowIdleVector;
+    let targetLeft = leftElbow3DRelativeVector;
+    let initRight = rightElbowIdleVector;
+    let targetRight = rightElbow3DRelativeVector;
     // let init = new THREE.Vector3(0.5, -0.5, 0);
     // let target = new THREE.Vector3(0.5, 0.5, 0.5);
     
-    let [alpha, beta, gamma] = eulerAnglesFromVectorMovement(init, target);
+    initLeft.normalize();
+    targetLeft.normalize();
     
-    leftArm.rotation.x = this.smoothMovement(alpha, leftArm.rotation.x, 0.1);
-    leftArm.rotation.y = this.smoothMovement(-beta, leftArm.rotation.y, 0.1);
-    leftArm.rotation.z = this.smoothMovement(-gamma, leftArm.rotation.z, 0.1);
+    // Quaternion (bypass gimbal lock)
+    let quaternionLeft = new THREE.Quaternion();
+    quaternionLeft.setFromUnitVectors(initLeft, targetLeft);
+    // Smooth quaternion rotation
+    leftArm.quaternion.slerp(quaternionLeft, 0.1);
     
-    showXValue(alpha);
-    showYValue(beta);
-    showZValue(gamma);
+    initRight.normalize();
+    targetRight.normalize();
+    
+    let quaternionRight = new THREE.Quaternion();
+    quaternionRight.setFromUnitVectors(initRight, targetRight);
+    rightArm.quaternion.slerp(quaternionRight, 0.1);
+    
+    // Forget about Euler Angles, it will lock rotation on the xy plane if z axis is 0.
+    // let [alphaLeft, betaLeft, gammaLeft] = eulerAnglesFromVectorMovement(initLeft, targetLeft);
+    // let [alphaRight, betaRight, gammaRight] = eulerAnglesFromVectorMovement(initRight, targetRight);
+    
+    // leftArm.rotation.x = this.smoothMovement(-alphaLeft, leftArm.rotation.x, 0.1);
+    // leftArm.rotation.y = this.smoothMovement(betaLeft, leftArm.rotation.y, 0.1);
+    // leftArm.rotation.z = this.smoothMovement(gammaLeft, leftArm.rotation.z, 0.1);
+    
+    // rightArm.rotation.x = this.smoothMovement(alphaRight, rightArm.rotation.x, 0.1);
+    // rightArm.rotation.y = this.smoothMovement(betaRight, rightArm.rotation.y, 0.1);
+    // rightArm.rotation.z = this.smoothMovement(-gammaRight, rightArm.rotation.z, 0.1);
+    
+    // TODO: starting origin of cartesian and canvas coordinate is different
+    // Notes: z index is negative on forward and positive on backward
+    showXValue(leftElbow3DRelativeVector.x);
+    showYValue(leftElbow3DRelativeVector.y);
+    showZValue(leftElbow3DRelativeVector.z);
   }
   
   guideUpperBodyMovement(faces: Face[], poses: Pose[]) {
