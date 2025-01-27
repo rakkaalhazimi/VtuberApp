@@ -729,46 +729,60 @@ export class ModelMovementGuider {
     
     // TODO: starting origin of cartesian and canvas coordinate is different
     // Notes: z index is negative on forward and positive on backward
-    showXValue(leftElbow3DRelativeVector.x);
-    showYValue(leftElbow3DRelativeVector.y);
-    showZValue(leftElbow3DRelativeVector.z);
+    // showXValue(leftElbow3DRelativeVector.x);
+    // showYValue(leftElbow3DRelativeVector.y);
+    // showZValue(leftElbow3DRelativeVector.z);
   }
   
   guideUpperBodyMovement(faces: Face[], poses: Pose[]) {
-    // let origin = 
-    //   this.faceLandmark.getScaledLandmarkCoordinate(
-    //     faces, LandmarkPoint.NOSE_MIDDLE
-    // );
     
     let currentPose = poses[0];
     
-    let leftShoulder = currentPose.keypoints[MovenetPosePoint.LEFT_SHOULDER];
-    let rightShoulder = currentPose.keypoints[MovenetPosePoint.RIGHT_SHOULDER];
-    let origin = {
-      x: ((leftShoulder.x - rightShoulder.x) / 2) + rightShoulder.x,
-      y: ((leftShoulder.y - rightShoulder.y) / 2) + rightShoulder.y,
-      z: leftShoulder.z
-    }
+    let leftShoulder3DPose = currentPose.keypoints3D![this.posePoint.LEFT_SHOULDER];
+    let rightShoulder3DPose = currentPose.keypoints3D![this.posePoint.RIGHT_SHOULDER];
+    let shoulderCenter3DVector = new THREE.Vector3(
+      (leftShoulder3DPose.x + rightShoulder3DPose.x) / 2,
+      (leftShoulder3DPose.y + rightShoulder3DPose.y) / 2,
+      (leftShoulder3DPose.z! + rightShoulder3DPose.z!) / 2,
+    );
     
-    // TODO: move the upper body based on shoulder
-    // Scale the coordinate
-    origin.x = (origin.x - 180) / 180;
-    origin.y = (origin.y - 135) / 135;
+    let leftHip3DPose = currentPose.keypoints3D![this.posePoint.LEFT_HIP];
+    let rightHip3DPose = currentPose.keypoints3D![this.posePoint.RIGHT_HIP];
+    let hipCenter3DVector = new THREE.Vector3(
+      (leftHip3DPose.x + rightHip3DPose.x) / 2,
+      (leftHip3DPose.y + rightHip3DPose.y) / 2,
+      (leftHip3DPose.z! + rightHip3DPose.z!) / 2,
+    );
     
-    // coor.x = (coor.x - this.halfVideoWidth) / this.halfVideoWidth;
-    // coor.y = (coor.y - this.halfVideoHeight) / this.halfVideoHeight;
-    // coor.z = (coor.z! - this.initFaceZ) / this.initFaceZ;
+    // Vector between the center shoulder and center hip
+    let torso3DVector = new THREE.Vector3(
+      (shoulderCenter3DVector.x - hipCenter3DVector.x),
+      -(shoulderCenter3DVector.y - hipCenter3DVector.y),
+      (shoulderCenter3DVector.z! - hipCenter3DVector.z!),
+    );
     
-    // console.log(origin.x, origin.y);
+    let horizontalDeltaX = leftShoulder3DPose.x - rightShoulder3DPose.x;
+    let horizontalDeltaY = leftShoulder3DPose.y - rightShoulder3DPose.y;
+    let horizontalDeltaZ = leftShoulder3DPose.z! - rightShoulder3DPose.z!;
+    let verticalDeltaY = shoulderCenter3DVector.y - hipCenter3DVector.y;
+    let verticalDeltaZ = shoulderCenter3DVector.z! - hipCenter3DVector.z!;
+    
+    // atan2 returns angle between [-180, 180]
+    let roll = Math.atan2(torso3DVector.x, torso3DVector.y);
+    let yaw = horizontalDeltaZ / horizontalDeltaX;
+    let pitch = verticalDeltaZ / verticalDeltaY;
     
     let upperBody = this.model.boneDict['Upper body'];
     let head = this.model.boneDict['Head'];
     
     // Rotate upper body left and right
-    // upperBody.rotation.z += this.shiftCoordinateNew(upperBody.rotation.z, origin.x);
+    upperBody.rotation.z = this.smoothMovement(roll, upperBody.rotation.z);
     
     // Rotate upper body forward and backward;
-    // upperBody.rotation.x += this.shiftCoordinateNew(upperBody.rotation.x, origin.z!);
+    upperBody.rotation.x = this.smoothMovement(pitch, upperBody.rotation.x);
+    
+    // Twist upper body left and right
+    upperBody.rotation.y = this.smoothMovement(yaw, upperBody.rotation.y);
     
     // Rotate head upward if we get too close
     // head.rotation.x += this.shiftCoordinateNew(head.rotation.x, -origin.z!);
