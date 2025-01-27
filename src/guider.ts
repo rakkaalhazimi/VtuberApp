@@ -790,15 +790,4 @@ export class ModelMovementGuider {
     // Align head straight as the upper body rotate left and right
     // head.rotation.z += this.shiftCoordinateNew(head.rotation.z, -origin.x);
   }
-  
-  guideMovement(faces: Face[]) {
-    if (!faces.length) {
-      return;
-    }
-    this.guideBlinking(faces);
-    // this.guideOpenMouth(faces);
-    this.guideHeadRotation(faces);
-    // this.guideUpperBodyMovement(faces);
-  }
-  
 }
