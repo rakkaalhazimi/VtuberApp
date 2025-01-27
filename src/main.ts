@@ -217,8 +217,6 @@ class App {
       moveGuider.guideBlinking(faces);
       moveGuider.guideMouthMovement(faces);
       moveGuider.guideUpperBodyMovement(poses);
-      // moveGuider.guideUpperBodyMovement([], poses);
-      // moveGuider.guideShoulderMovement(poses);
       moveGuider.guideArmsMovement(poses);
       
       // let upperBody = model.boneDict['Upper body'];
