@@ -216,7 +216,7 @@ class App {
       moveGuider.guideHeadRotation(faces);
       moveGuider.guideBlinking(faces);
       moveGuider.guideMouthMovement(faces);
-      moveGuider.guideUpperBodyMovement(faces, poses);
+      moveGuider.guideUpperBodyMovement(poses);
       // moveGuider.guideUpperBodyMovement([], poses);
       // moveGuider.guideShoulderMovement(poses);
       moveGuider.guideArmsMovement(poses);

@@ -734,7 +734,7 @@ export class ModelMovementGuider {
     // showZValue(leftElbow3DRelativeVector.z);
   }
   
-  guideUpperBodyMovement(faces: Face[], poses: Pose[]) {
+  guideUpperBodyMovement(poses: Pose[]) {
     
     let currentPose = poses[0];
     
