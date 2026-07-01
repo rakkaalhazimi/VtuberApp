@@ -8,15 +8,18 @@ import {
   euclideanDistance2D, 
   euclideanDistance3D, 
   gradient2D, 
-  angleOfTriangle2D, 
+  angleOfTriangle2D,
+  angleOfTriangle2DNew,
   getSkewSymmetricMatrix, 
   getRotationMatrix, 
   crossProduct,
   rotationMatrixToEulerAnglesNew,
-  eulerAnglesFromVectorMovement } from './math';
+  eulerAnglesFromVectorMovement,
+ } from './math';
 import { showXValue, showYValue, showZValue } from './metric';
 import { Model } from './model';
 import { BlazePosePoint, MovenetPosePoint, PosePoint, PoseEstimation } from './pose-estimation';
+import { keypointToVector3 } from './utils';
 
 
 
@@ -45,6 +48,11 @@ export class ModelMovementGuider {
   public poseEstimation: PoseEstimation;
   public posePoint: PosePoint;
   
+  public leftWristRestPosition: THREE.Vector3;
+  public leftElbowRestPosition: THREE.Vector3;
+  public leftArmRestPosition: THREE.Vector3;
+  public leftShoulderRestPosition: THREE.Vector3;
+  
   constructor(
     model: Model, 
     faceLandmark: FaceLandmark, 
@@ -53,6 +61,43 @@ export class ModelMovementGuider {
     this.model = model;
     this.faceLandmark = faceLandmark;
     this.poseEstimation = poseEstimation;
+    
+    let leftElbow = this.model.boneDict['Left elbow'];
+    this.leftElbowRestPosition = leftElbow.position.clone();
+    
+    let leftWrist = this.model.boneDict['Left wrist'];
+    this.leftWristRestPosition = leftWrist.position.clone();
+    
+    let leftShoulder = this.model.boneDict['Left shoulder'];
+    this.leftShoulderRestPosition = leftShoulder.position.clone();
+    
+    let leftArm = this.model.boneDict['Left arm'];
+    this.leftArmRestPosition = leftArm.position.clone();
+    
+    // console.log('Left Shoulder');
+    // console.log(this.leftShoulderRestPosition.normalize());
+    // console.log(leftShoulder.position.normalize());
+    
+    // console.log('Left Arm');
+    // console.log(this.leftArmRestPosition.normalize());
+    // console.log(leftArm.position.normalize());
+    
+    // console.log('Left Elbow');
+    // console.log(this.leftElbowRestPosition.normalize());
+    // console.log(leftElbow.position.normalize());
+    
+    // console.log('Left Wrist');
+    // console.log(this.leftWristRestPosition.normalize());
+    // console.log(leftWrist.position.normalize());
+    
+    // console.log('Elbow wrist direction');
+    // const bind = leftWrist.position.clone().sub(leftElbow.position).normalize();
+    // const bind = new THREE.Vector3().subVectors(this.leftWristRestPosition, this.leftElbowRestPosition).normalize();
+    // console.log(bind);
+    // console.log(new THREE.Vector3().subVectors(
+    //   this.leftWristRestPosition,
+    //   this.leftElbowRestPosition
+    // ).normalize());
     
     if (!this.poseEstimation.modelType) {
       throw new Error(`poseEstimation ModelType is undefined, please load pose estimation detector first`);
@@ -632,106 +677,50 @@ export class ModelMovementGuider {
     //   rightArm.rotation.z = this.smoothMovement(0.8, rightArm.rotation.z, 0.1);
     // }
     
-    showXValue(axisOfRotation.x);
-    showYValue(axisOfRotation.y);
-    showZValue(axisOfRotation.z);
+    // showXValue(axisOfRotation.x);
+    // showYValue(axisOfRotation.y);
+    // showZValue(axisOfRotation.z);
   }
   
-  guideArmsMovement(poses: Pose[]) {
+  guideLeftArmMovement(poses: Pose[]) {
     let currentPose = poses[0];
+
+    let leftShoulder3DVector = keypointToVector3(currentPose.keypoints3D![this.posePoint.LEFT_SHOULDER]);
+    let leftElbow3DVector    = keypointToVector3(currentPose.keypoints3D![this.posePoint.LEFT_ELBOW]);
+    let leftWrist3DVector    = keypointToVector3(currentPose.keypoints3D![this.posePoint.LEFT_WRIST]);
     
-    let leftShoulder3DPose = currentPose.keypoints3D![this.posePoint.LEFT_SHOULDER];
-    let rightShoulder3DPose = currentPose.keypoints3D![this.posePoint.RIGHT_SHOULDER];
     
-    let leftElbow3DPose = currentPose.keypoints3D![this.posePoint.LEFT_ELBOW];
-    let rightElbow3DPose = currentPose.keypoints3D![this.posePoint.RIGHT_ELBOW];
+    let leftArm   = this.model.boneDict['Left arm'];   // Upper arm bone
+    let leftElbow = this.model.boneDict['Left elbow']; // Forearm bone
     
-    let leftArm = this.model.boneDict['Left arm'];
-    let rightArm = this.model.boneDict['Right arm'];
+    leftShoulder3DVector.y *= -1;
+    leftElbow3DVector.y *= -1;
+    leftWrist3DVector.y *= -1;
+    leftShoulder3DVector.z *= -1;
+    leftElbow3DVector.z *= -1;
+    leftWrist3DVector.z *= -1;
     
-    // Relative to shoulder
-    let leftElbowIdleVector = new THREE.Vector3(
-      Math.cos(Math.PI / 4 * 7), // default pi/4*7
-      Math.sin(Math.PI / 4 * 7),
-      0
+    const leftArmBindDir = new THREE.Vector3().subVectors(this.leftElbowRestPosition, this.leftShoulderRestPosition).normalize();
+    const leftArmPoseDir = new THREE.Vector3().subVectors(leftElbow3DVector, leftShoulder3DVector).normalize();
+    // const leftArmPoseDir = new THREE.Vector3(0, 1, 1).normalize();
+    
+    const q = new THREE.Quaternion().setFromUnitVectors(
+      leftArmBindDir,
+      leftArmPoseDir,
     );
     
-    let rightElbowIdleVector = new THREE.Vector3(
-      Math.cos(Math.PI / 4 * 5), 
-      Math.sin(Math.PI / 4 * 5),
-      0
+    leftArm.quaternion.slerp(q, 0.1);
+    
+    const leftElbowBindDir = new THREE.Vector3().subVectors(this.leftWristRestPosition, this.leftShoulderRestPosition).normalize();
+    const leftElbowPoseDir = new THREE.Vector3().subVectors(leftWrist3DVector, leftShoulder3DVector).normalize();
+    // const leftElbowPoseDir = new THREE.Vector3(0, 1, 1).normalize();
+    
+    const qElbow = new THREE.Quaternion().setFromUnitVectors(
+      leftElbowBindDir,
+      leftElbowPoseDir,
     );
     
-    let leftElbow3DRelativeVector = new THREE.Vector3(
-      leftElbow3DPose.x - leftShoulder3DPose.x,
-      -(leftElbow3DPose.y - leftShoulder3DPose.y),
-      -(leftElbow3DPose.z! - leftShoulder3DPose.z!),
-    );
-    
-    // Test with target vector to see that the movement
-    // is correct.
-    // T-Pose
-    let leftElbow3DTPose = new THREE.Vector3(
-      Math.cos(Math.PI * 2),
-      Math.sin(Math.PI * 2),
-      0,
-    );
-    
-    // Point Forward
-    let leftElbow3DPointingVector = new THREE.Vector3(
-      0.1,   // X: Slight tilt to the right
-      -0.56,  // Y: Slight downward movement
-      1.99   // Z: Forward movement
-    );
-    
-    
-    let rightElbow3DRelativeVector = new THREE.Vector3(
-      rightElbow3DPose.x - rightShoulder3DPose.x,
-      -(rightElbow3DPose.y - rightShoulder3DPose.y),
-      -(rightElbow3DPose.z! - rightShoulder3DPose.z!),
-    );
-    
-    
-    let initLeft = leftElbowIdleVector;
-    let targetLeft = leftElbow3DRelativeVector;
-    let initRight = rightElbowIdleVector;
-    let targetRight = rightElbow3DRelativeVector;
-    // let init = new THREE.Vector3(0.5, -0.5, 0);
-    // let target = new THREE.Vector3(0.5, 0.5, 0.5);
-    
-    initLeft.normalize();
-    targetLeft.normalize();
-    
-    // Quaternion (bypass gimbal lock)
-    let quaternionLeft = new THREE.Quaternion();
-    quaternionLeft.setFromUnitVectors(initLeft, targetLeft);
-    // Smooth quaternion rotation
-    leftArm.quaternion.slerp(quaternionLeft, 0.1);
-    
-    initRight.normalize();
-    targetRight.normalize();
-    
-    let quaternionRight = new THREE.Quaternion();
-    quaternionRight.setFromUnitVectors(initRight, targetRight);
-    rightArm.quaternion.slerp(quaternionRight, 0.1);
-    
-    // Forget about Euler Angles, it will lock rotation on the xy plane if z axis is 0.
-    // let [alphaLeft, betaLeft, gammaLeft] = eulerAnglesFromVectorMovement(initLeft, targetLeft);
-    // let [alphaRight, betaRight, gammaRight] = eulerAnglesFromVectorMovement(initRight, targetRight);
-    
-    // leftArm.rotation.x = this.smoothMovement(-alphaLeft, leftArm.rotation.x, 0.1);
-    // leftArm.rotation.y = this.smoothMovement(betaLeft, leftArm.rotation.y, 0.1);
-    // leftArm.rotation.z = this.smoothMovement(gammaLeft, leftArm.rotation.z, 0.1);
-    
-    // rightArm.rotation.x = this.smoothMovement(alphaRight, rightArm.rotation.x, 0.1);
-    // rightArm.rotation.y = this.smoothMovement(betaRight, rightArm.rotation.y, 0.1);
-    // rightArm.rotation.z = this.smoothMovement(-gammaRight, rightArm.rotation.z, 0.1);
-    
-    // TODO: starting origin of cartesian and canvas coordinate is different
-    // Notes: z index is negative on forward and positive on backward
-    // showXValue(leftElbow3DRelativeVector.x);
-    // showYValue(leftElbow3DRelativeVector.y);
-    // showZValue(leftElbow3DRelativeVector.z);
+    leftElbow.quaternion.slerp(qElbow, 0.1);
   }
   
   guideUpperBodyMovement(poses: Pose[]) {
