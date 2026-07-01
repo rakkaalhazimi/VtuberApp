@@ -89,7 +89,7 @@ class App {
     // let controls = new MapControls(camera, renderer.domElement);
     let controls = new OrbitControls(camera, renderer.domElement);
     camera.position.y = 19;
-    camera.position.z = 5;
+    camera.position.z = 10;
     camera.rotation.x += -10 * Math.PI / 180;
   
     // Background color
@@ -124,10 +124,37 @@ class App {
     
     
     // Make model arms rotate downward
+    let leftShoulder = model.boneDict['Left shoulder'];
+    let leftElbow = model.boneDict['Left elbow'];
     let leftArm = model.boneDict['Left arm'];
-    let rightArm = model.boneDict['Right arm'];
-    leftArm.rotation.z = -0.5;
-    rightArm.rotation.z = 0.5;
+    let leftWrist = model.boneDict['Left wrist'];
+    // let rightArm = model.boneDict['Right arm'];
+    
+    // let bind = leftWrist.position.clone().sub(leftElbow.position).normalize();
+    // let bindRotation = new THREE.Quaternion().setFromUnitVectors(
+    //   new THREE.Vector3(0, -1, 0),
+    //   bind
+    // );
+    
+    // console.log('Bind pose: ', bind);
+    
+    // const from = new THREE.Vector3(
+    //   Math.cos(7/4 * Math.PI), 
+    //   Math.sin(7/4 * Math.PI), 
+    //   0
+    // ).normalize();
+    // const to = new THREE.Vector3(
+    //   Math.cos(0), 
+    //   Math.sin(0), 
+    //   -Math.cos(0),
+    // );
+    // const q = new THREE.Quaternion();
+    // q.setFromUnitVectors(bind, to);
+    // leftArm.applyQuaternion(bindRotation.invert());
+    
+    
+    // leftArm.rotation.z = -0.5;
+    // rightArm.rotation.z = 0.5;
     
     // Hands up
     // leftArm.rotation.x = -1.03;
@@ -155,6 +182,14 @@ class App {
     
     // let boneSphereMap = new Map();
     // boneSphereMap.set(sphere.id, rightArm.id);
+    
+    // let testJoint = new DummyJoints(15, 20);
+    // testJoint.rotateShoulder(0, 0, degToRad(45));
+    // testJoint.rotateElbow(0, 0, 0);
+    // scene.add(testJoint.group);
+    
+    // leftArm.rotation.set(0, 0, degToRad(45));
+    
     
     
     // Raycasting
@@ -209,15 +244,15 @@ class App {
       let poses = await poseEstimation.estimatePose(video);
       
       // Draw face landmarks
-      // canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
-      // faceLandmark.drawFaceLandmarks(canvasCtx, faces);
-      // poseEstimation.drawPoseLandmarks(canvasCtx, poses);
+      canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
+      faceLandmark.drawFaceLandmarks(canvasCtx, faces);
+      poseEstimation.drawPoseLandmarks(canvasCtx, poses);
       
       moveGuider.guideHeadRotation(faces);
       moveGuider.guideBlinking(faces);
       moveGuider.guideMouthMovement(faces);
       moveGuider.guideUpperBodyMovement(poses);
-      moveGuider.guideArmsMovement(poses);
+      moveGuider.guideLeftArmMovement(poses);
       
       // let upperBody = model.boneDict['Upper body'];
       // upperBody.rotation.z += 0.1;
