@@ -52,6 +52,10 @@ export class ModelMovementGuider {
   public leftElbowRestPosition: THREE.Vector3;
   public leftArmRestPosition: THREE.Vector3;
   public leftShoulderRestPosition: THREE.Vector3;
+  public rightWristRestPosition: THREE.Vector3;
+  public rightElbowRestPosition: THREE.Vector3;
+  public rightArmRestPosition: THREE.Vector3;
+  public rightShoulderRestPosition: THREE.Vector3;
   
   constructor(
     model: Model, 
@@ -73,6 +77,18 @@ export class ModelMovementGuider {
     
     let leftArm = this.model.boneDict['Left arm'];
     this.leftArmRestPosition = leftArm.position.clone();
+
+    let rightShoulder = this.model.boneDict['Right shoulder'];
+    this.rightShoulderRestPosition = rightShoulder.position.clone();
+
+    let rightArm = this.model.boneDict['Right arm'];
+    this.rightArmRestPosition = rightArm.position.clone();
+
+    let rightElbow = this.model.boneDict['Right elbow'];
+    this.rightElbowRestPosition = rightElbow.position.clone();
+
+    let rightWrist = this.model.boneDict['Right wrist'];
+    this.rightWristRestPosition = rightWrist.position.clone();
     
     // console.log('Left Shoulder');
     // console.log(this.leftShoulderRestPosition.normalize());
@@ -721,6 +737,44 @@ export class ModelMovementGuider {
     );
     
     leftElbow.quaternion.slerp(qElbow, 0.1);
+  }
+
+  guideRightArmMovement(poses: Pose[]) {
+    let currentPose = poses[0];
+
+    let rightShoulder3DVector = keypointToVector3(currentPose.keypoints3D![this.posePoint.RIGHT_SHOULDER]);
+    let rightElbow3DVector    = keypointToVector3(currentPose.keypoints3D![this.posePoint.RIGHT_ELBOW]);
+    let rightWrist3DVector    = keypointToVector3(currentPose.keypoints3D![this.posePoint.RIGHT_WRIST]);
+
+    let rightArm   = this.model.boneDict['Right arm'];   // Upper arm bone
+    let rightElbow = this.model.boneDict['Right elbow']; // Forearm bone
+
+    rightShoulder3DVector.y *= -1;
+    rightElbow3DVector.y *= -1;
+    rightWrist3DVector.y *= -1;
+    rightShoulder3DVector.z *= -1;
+    rightElbow3DVector.z *= -1;
+    rightWrist3DVector.z *= -1;
+
+    const rightArmBindDir = new THREE.Vector3().subVectors(this.rightElbowRestPosition, this.rightShoulderRestPosition).normalize();
+    const rightArmPoseDir = new THREE.Vector3().subVectors(rightElbow3DVector, rightShoulder3DVector).normalize();
+
+    const qr = new THREE.Quaternion().setFromUnitVectors(
+      rightArmBindDir,
+      rightArmPoseDir,
+    );
+
+    rightArm.quaternion.slerp(qr, 0.1);
+
+    const rightElbowBindDir = new THREE.Vector3().subVectors(this.rightWristRestPosition, this.rightShoulderRestPosition).normalize();
+    const rightElbowPoseDir = new THREE.Vector3().subVectors(rightWrist3DVector, rightShoulder3DVector).normalize();
+
+    const qrElbow = new THREE.Quaternion().setFromUnitVectors(
+      rightElbowBindDir,
+      rightElbowPoseDir,
+    );
+
+    rightElbow.quaternion.slerp(qrElbow, 0.1);
   }
   
   guideUpperBodyMovement(poses: Pose[]) {

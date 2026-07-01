@@ -253,6 +253,7 @@ class App {
       moveGuider.guideMouthMovement(faces);
       moveGuider.guideUpperBodyMovement(poses);
       moveGuider.guideLeftArmMovement(poses);
+      moveGuider.guideRightArmMovement(poses);
       
       // let upperBody = model.boneDict['Upper body'];
       // upperBody.rotation.z += 0.1;
