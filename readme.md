@@ -17,10 +17,12 @@ Simulate virtual youtuber by moving character models based on the human motion.
 ## THREE Js Coordinate
 ```
 from left-top to right-down
-up - y++
+up - y--
 down - y++
 left - x--
 right - x++
+forward - z--
+backward - z++
 ```
 
 ## Credits
