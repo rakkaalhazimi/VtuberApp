@@ -65,9 +65,17 @@ class App {
     scene.add( ambient );
   
     let directionalLight = new THREE.DirectionalLight( 0xffffff, 2 );
-    directionalLight.position.set( 0, 0, 0 ).normalize();
+    directionalLight.position.set(3, 8, 5);
+    directionalLight.castShadow = true;
     scene.add( directionalLight );
-  
+    
+    const hemi = new THREE.HemisphereLight(
+      0xffffff, // sky
+      0x404040, // ground
+      1.2
+    );
+    scene.add(hemi);
+    
     // Camera
     let camera = new THREE.PerspectiveCamera(
       75, window.innerWidth / window.innerHeight, 0.1, 1000
