@@ -833,7 +833,7 @@ export class ModelMovementGuider {
     upperBody.rotation.z = this.smoothMovement(roll, upperBody.rotation.z);
     
     // Rotate upper body forward and backward;
-    upperBody.rotation.x = this.smoothMovement(pitch, upperBody.rotation.x);
+    upperBody.rotation.x = this.smoothMovement(pitch - 0.25, upperBody.rotation.x);
     
     // Twist upper body left and right
     upperBody.rotation.y = this.smoothMovement(yaw, upperBody.rotation.y);
