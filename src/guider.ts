@@ -731,12 +731,18 @@ export class ModelMovementGuider {
     const leftElbowPoseDir = new THREE.Vector3().subVectors(leftWrist3DVector, leftShoulder3DVector).normalize();
     // const leftElbowPoseDir = new THREE.Vector3(0, 1, 1).normalize();
     
-    const qElbow = new THREE.Quaternion().setFromUnitVectors(
-      leftElbowBindDir,
-      leftElbowPoseDir,
-    );
+    if (currentPose.keypoints3D![this.posePoint.LEFT_ELBOW].score! > 0.5) {
+      const qElbow = new THREE.Quaternion().setFromUnitVectors(
+        leftElbowBindDir,
+        leftElbowPoseDir,
+      );
+      leftElbow.quaternion.slerp(qElbow, 0.1);
+      
+    } else {
+      const undoRotation = new THREE.Quaternion();
+      leftElbow.quaternion.slerp(undoRotation, 0.1);
+    }
     
-    leftElbow.quaternion.slerp(qElbow, 0.1);
   }
 
   guideRightArmMovement(poses: Pose[]) {
@@ -768,13 +774,18 @@ export class ModelMovementGuider {
 
     const rightElbowBindDir = new THREE.Vector3().subVectors(this.rightWristRestPosition, this.rightShoulderRestPosition).normalize();
     const rightElbowPoseDir = new THREE.Vector3().subVectors(rightWrist3DVector, rightShoulder3DVector).normalize();
-
-    const qrElbow = new THREE.Quaternion().setFromUnitVectors(
-      rightElbowBindDir,
-      rightElbowPoseDir,
-    );
-
-    rightElbow.quaternion.slerp(qrElbow, 0.1);
+    
+    if (currentPose.keypoints3D![this.posePoint.RIGHT_ELBOW].score! > 0.5) {
+      const qrElbow = new THREE.Quaternion().setFromUnitVectors(
+        rightElbowBindDir,
+        rightElbowPoseDir,
+      );
+      rightElbow.quaternion.slerp(qrElbow, 0.1);
+      
+    } else {
+      const undoRotation = new THREE.Quaternion();
+      rightElbow.quaternion.slerp(undoRotation, 0.1);
+    }
   }
   
   guideUpperBodyMovement(poses: Pose[]) {
