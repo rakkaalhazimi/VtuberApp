@@ -238,7 +238,12 @@ class App {
     let moveGuider = new ModelMovementGuider(model, faceLandmark, poseEstimation);
     
     async function animate() {
-      requestAnimationFrame(animate);
+      // requestAnimationFrame(animate);
+      
+      setTimeout( function() {
+        requestAnimationFrame( animate );
+      }, 1000 / 25 );
+      
       
       let faces = await faceLandmark.estimateFaces(video);
       let poses = await poseEstimation.estimatePose(video);
